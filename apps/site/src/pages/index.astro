@@ -1,0 +1,811 @@
+---
+import '@obsidiary/astro/styles.css';
+
+const ADOPTION_URL = import.meta.env.PUBLIC_ADOPTION_URL ?? '';
+const REPO = 'https://github.com/Chitransh-Saxena/obsidiary';
+
+const forAnyone = [
+  {
+    title: 'You already write in Obsidian',
+    body: 'Obsidian Publish is $10 a month. This is free, the output is yours, and your notes never leave a folder you control.',
+  },
+  {
+    title: 'A thinking log where the links are the point',
+    body: 'Backlinks with the surrounding sentence, a real graph, transclusion. If a blog would flatten what you are doing, this will not.',
+  },
+  {
+    title: 'Documentation that lives with the code',
+    body: 'Write docs in Obsidian, publish them from the repo they describe. No CMS, no export step, no second copy to drift.',
+  },
+  {
+    title: 'Notes meant to be read, not just kept',
+    body: 'Course material, teaching notes, reading notes. Canvas files carry the diagrams; embeds mean you write a thing once and reuse it.',
+  },
+  {
+    title: 'Publishing a vault you do not own',
+    body: 'Point it at any public repo — a study group’s shared notes, a spec, someone’s open wiki. Nothing to fork, nothing to maintain.',
+  },
+  {
+    title: 'Reading a vault with zero commitment',
+    body: 'The live view renders any public vault in your browser. No clone, no build, no account. Useful before you commit to anything.',
+  },
+];
+
+const forMe = [
+  'Engineering notes and everything I am currently figuring out, published at my own domain and linked from my portfolio.',
+  'FPV drone build logs — canvas files for wiring and frame layouts, embeds so a parts list is written once and reused across builds.',
+  'Guitar: song breakdowns, practice logs, the theory I keep having to re-learn.',
+  'Photography: shoot notes, settings that worked, gear I actually reach for.',
+  'Reading notes that feed the bookshelf on my site, instead of rotting in a folder.',
+];
+
+const notFor = [
+  ['Private notes', 'A public repo means a public site. Selective publishing exists, but the safe answer is a separate private repo.'],
+  ['Editing on the web', 'There is no web editor and there will not be one. Obsidian — or any text editor — is the editor.'],
+  ['Being a blog engine', 'No comments, no newsletter, no scheduling. If you want a blog, write a blog.'],
+];
+
+const hosts = [
+  ['Cloudflare', 'npx wrangler deploy', 'Unlimited bandwidth · free custom domain · commercial use allowed', true],
+  ['Vercel', 'import the repo', '100 GB · non-commercial only', false],
+  ['Netlify', 'import the repo', '100 GB · 300 build minutes', false],
+  ['GitHub Pages', 'Settings → Pages → Actions', '100 GB · non-commercial only · watch the base path', false],
+];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Obsidiary — publish an Obsidian vault as a website</title>
+    <meta
+      name="description"
+      content="Free and open source. Turn any Obsidian vault into a fast, linked, searchable website — with your notes in their own repository and upgrades that are npm update, not a merge conflict."
+    />
+    <meta property="og:title" content="Obsidiary" />
+    <meta property="og:description" content="Publish an Obsidian vault as a fast, linked, free website." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem('obsidiary-theme');
+        const prefers = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = stored || prefers;
+      })();
+    </script>
+  </head>
+
+  <body class="lp">
+    <nav class="lp-nav">
+      <span class="lp-mark">obsidiary</span>
+      <div class="lp-nav-links">
+        <a href="/docs">Docs</a>
+        <a href="/live">Live demo</a>
+        <a href={REPO}>GitHub</a>
+        <button id="lp-theme" type="button" aria-label="Toggle theme">◐</button>
+      </div>
+    </nav>
+
+    <header class="lp-hero">
+      <div class="lp-hero-copy">
+        <p class="lp-eyebrow" style="--i:0">Free · open source · MIT</p>
+        <h1 style="--i:1">
+          Your vault,<br /><em>on the web.</em>
+        </h1>
+        <p class="lp-lede" style="--i:2">
+          Obsidiary turns a folder of Obsidian markdown into a fast, linked, searchable
+          site — wikilinks, transclusion, callouts, backlinks, a graph, and
+          <code>.canvas</code> files that actually render.
+        </p>
+        <p class="lp-clarify" style="--i:3">
+          <strong>Obsidian stays your editor.</strong> This is only the other half —
+          the part that puts a vault on the web and makes it readable by someone who
+          doesn’t have your vault.
+        </p>
+
+        <div class="lp-cmd" style="--i:4">
+          <code id="lp-cmd-text">npm create obsidiary@latest</code>
+          <button id="lp-copy" type="button" aria-label="Copy command">copy</button>
+        </div>
+
+        <div class="lp-cta" style="--i:5">
+          <a class="lp-btn lp-btn-primary" href="/live">Try it on any repo →</a>
+          <a class="lp-btn" href="/docs">Read the guide</a>
+        </div>
+      </div>
+
+      <div class="lp-hero-vis" style="--i:6" aria-hidden="true">
+        <canvas id="lp-graph"></canvas>
+        <p class="lp-vis-caption">the graph engine, running</p>
+      </div>
+    </header>
+
+    <section class="lp-counters" id="lp-counters" hidden>
+      <dl>
+        <div><dt>stars</dt><dd data-counter="stars">—</dd></div>
+        <div><dt>forks</dt><dd data-counter="forks">—</dd></div>
+        <div><dt>downloads / week</dt><dd data-counter="downloadsWeek">—</dd></div>
+        <div><dt>downloads / month</dt><dd data-counter="downloadsMonth">—</dd></div>
+      </dl>
+      <p class="lp-counters-note">
+        Public data only — npm and GitHub. Obsidiary contains no telemetry.
+      </p>
+    </section>
+
+    <section class="lp-section" id="use-cases">
+      <p class="lp-label">What it is actually for</p>
+      <h2>Good reasons to use this</h2>
+      <div class="lp-cards">
+        {
+          forAnyone.map((item, i) => (
+            <article class="lp-card" style={`--i:${i}`}>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="lp-section lp-split">
+      <div>
+        <p class="lp-label">Dogfood</p>
+        <h2>What I use it for</h2>
+        <p class="lp-note">
+          I built this because I wanted it. These are the real vaults it runs.
+        </p>
+        <ul class="lp-list">
+          {forMe.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+      <div>
+        <p class="lp-label">Honesty</p>
+        <h2>When not to use it</h2>
+        <dl class="lp-notfor">
+          {
+            notFor.map(([title, body]) => (
+              <div>
+                <dt>{title}</dt>
+                <dd>{body}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </section>
+
+    <section class="lp-section">
+      <p class="lp-label">How it works</p>
+      <h2>Three files and a folder</h2>
+      <ol class="lp-steps">
+        <li>
+          <h3>Scaffold</h3>
+          <pre><code>npm create obsidiary@latest my-notes</code></pre>
+          <p>Zero dependencies, one question: is your vault a local folder or a repo?</p>
+        </li>
+        <li>
+          <h3>Point it at your notes</h3>
+          <pre><code>{`obsidiary({
+  vault: './vault',       // a folder here
+  // repo: 'you/notes',   // …or its own repository
+})`}</code></pre>
+          <p>
+            Notes in their own repo is the whole idea — the engine is a dependency,
+            never a fork of your content.
+          </p>
+        </li>
+        <li>
+          <h3>Deploy</h3>
+          <pre><code>npx wrangler deploy</code></pre>
+          <p>Or import the repo into Vercel or Netlify, or turn on GitHub Pages.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="lp-section">
+      <p class="lp-label">Deploy it free</p>
+      <h2>Every one of these costs nothing</h2>
+      <div class="lp-hosts">
+        {
+          hosts.map(([name, cmd, note, best]) => (
+            <div class={best ? 'lp-host is-best' : 'lp-host'}>
+              <h3>
+                {name}
+                {best && <span class="lp-pill">recommended</span>}
+              </h3>
+              <code>{cmd}</code>
+              <p>{note}</p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="lp-note">
+        Cloudflare wins on the free tier: unlimited bandwidth, free custom domains,
+        and no restriction on commercial use. Vercel and GitHub Pages both cap at
+        100 GB <em>and</em> forbid commercial sites.
+      </p>
+    </section>
+
+    <section class="lp-section lp-why">
+      <p class="lp-label">Why another one</p>
+      <h2>Quartz is good. Use it, unless…</h2>
+      <ul class="lp-list">
+        <li>
+          <strong>You want your notes in their own repository.</strong> Quartz has no
+          first-class support for it; everyone hand-rolls a submodule. Here it is one
+          config line.
+        </li>
+        <li>
+          <strong>You are tired of upgrade conflicts.</strong> Quartz ships a
+          <code>content/</code> folder upstream, so most <code>quartz update</code> runs
+          end in a merge. Distribution as a package was proposed and declined. Here the
+          engine is an npm dependency: <code>npm update</code>, nothing to resolve.
+        </li>
+        <li>
+          <strong>You want it to feel like the app.</strong> Sidebar, outline, backlinks
+          with context, ⌘K, hover previews, graph, canvas — not a docs template.
+        </li>
+      </ul>
+    </section>
+
+    <footer class="lp-footer">
+      <div>
+        <span class="lp-mark">obsidiary</span>
+        <p>MIT. Built by Chitransh Saxena.</p>
+      </div>
+      <div class="lp-footer-links">
+        <a href="/docs">Documentation</a>
+        <a href="/live">Live demo</a>
+        <a href="/graph">Graph</a>
+        <a href={REPO}>Source</a>
+      </div>
+    </footer>
+
+    <script define:vars={{ ADOPTION_URL }}>
+      // Counters are decoration: if the endpoint is missing or down, the strip
+      // simply never appears rather than showing a row of dashes.
+      if (ADOPTION_URL) {
+        fetch(ADOPTION_URL)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (!data) return;
+            const strip = document.getElementById('lp-counters');
+            let any = false;
+            for (const el of document.querySelectorAll('[data-counter]')) {
+              const value = data[el.getAttribute('data-counter')];
+              if (typeof value === 'number') {
+                el.textContent = value.toLocaleString();
+                any = true;
+              } else {
+                el.closest('div')?.remove();
+              }
+            }
+            if (any && strip) strip.hidden = false;
+          })
+          .catch(() => {});
+      }
+    </script>
+
+    <script>
+      import { boundsOf, createSimulation } from 'obsidiary';
+
+      document.getElementById('lp-theme')?.addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('obsidiary-theme', next);
+      });
+
+      const copyBtn = document.getElementById('lp-copy');
+      copyBtn?.addEventListener('click', async () => {
+        const text = document.getElementById('lp-cmd-text')?.textContent ?? '';
+        try {
+          await navigator.clipboard.writeText(text);
+          copyBtn.textContent = 'copied';
+          setTimeout(() => (copyBtn.textContent = 'copy'), 1400);
+        } catch {
+          copyBtn.textContent = 'select it';
+        }
+      });
+
+      // The hero visual is the product's own force simulation — the same code
+      // that lays out a real vault's graph, on a hand-made miniature.
+      const canvas = document.getElementById('lp-graph') as HTMLCanvasElement | null;
+      const ctx = canvas?.getContext('2d');
+      if (canvas && ctx) {
+        const ids = [
+          'index', 'Zettelkasten', 'Wikilinks', 'Canvas', 'Reading',
+          'Drones', 'Guitar', 'Astro', 'Graph', 'Embeds',
+        ];
+        const links = [
+          ['index', 'Zettelkasten'], ['index', 'Wikilinks'], ['index', 'Reading'],
+          ['Wikilinks', 'Embeds'], ['Wikilinks', 'Zettelkasten'], ['Canvas', 'Graph'],
+          ['Zettelkasten', 'Graph'], ['Reading', 'Drones'], ['Reading', 'Guitar'],
+          ['Astro', 'Canvas'], ['Astro', 'Embeds'], ['Graph', 'index'],
+        ].map(([source, target]) => ({ source: source!, target: target! }));
+
+        const sim = createSimulation(ids, links, { linkDistance: 58, repulsion: 1100 });
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        let w = 0;
+        let h = 0;
+        const resize = () => {
+          const rect = canvas.getBoundingClientRect();
+          const dpr = devicePixelRatio || 1;
+          w = rect.width;
+          h = rect.height;
+          canvas.width = Math.max(1, Math.round(w * dpr));
+          canvas.height = Math.max(1, Math.round(h * dpr));
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+
+        const paint = () => {
+          const s = getComputedStyle(document.documentElement);
+          const accent = s.getPropertyValue('--accent').trim() || '#2563eb';
+          const dim = s.getPropertyValue('--text-4').trim() || '#a3a3a3';
+          const edge = s.getPropertyValue('--border-strong').trim() || '#e0e0e0';
+
+          const b = boundsOf(sim.nodes, 30);
+          const scale = Math.min(w / (b.width || 1), h / (b.height || 1), 1.5);
+          const tx = w / 2 - ((b.minX + b.maxX) / 2) * scale;
+          const ty = h / 2 - ((b.minY + b.maxY) / 2) * scale;
+          const at = (n: { x: number; y: number }) => ({ x: n.x * scale + tx, y: n.y * scale + ty });
+
+          ctx.clearRect(0, 0, w, h);
+          ctx.strokeStyle = edge;
+          ctx.globalAlpha = 0.7;
+          ctx.lineWidth = 1;
+          for (const link of sim.links) {
+            const a = sim.nodes.find((n) => n.id === link.source);
+            const c = sim.nodes.find((n) => n.id === link.target);
+            if (!a || !c) continue;
+            const p1 = at(a);
+            const p2 = at(c);
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          for (const node of sim.nodes) {
+            const p = at(node);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.min(9, 3.6 + Math.sqrt(node.degree) * 1.8), 0, Math.PI * 2);
+            ctx.fillStyle = node.id === 'index' ? accent : dim;
+            ctx.fill();
+          }
+        };
+
+        resize();
+        if (reduce) {
+          sim.run();
+          paint();
+        } else {
+          sim.run(30);
+          const step = () => {
+            const alive = sim.tick();
+            paint();
+            if (alive) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+        addEventListener('resize', () => {
+          resize();
+          paint();
+        });
+        new MutationObserver(paint).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-theme'],
+        });
+      }
+    </script>
+
+    <style is:global>
+      [hidden] { display: none !important; }
+
+      .lp {
+        --lp-max: 1080px;
+        background:
+          radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0 / 26px 26px,
+          var(--bg);
+      }
+
+      .lp code, .lp pre { font-family: var(--font-mono); }
+
+      /* ---------- reveal ---------- */
+      @keyframes lp-rise {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: none; }
+      }
+      .lp-hero [style*="--i"],
+      .lp-card {
+        animation: lp-rise 0.7s var(--ease-out) backwards;
+        animation-delay: calc(var(--i, 0) * 70ms + 60ms);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .lp-hero [style*="--i"], .lp-card { animation: none; }
+      }
+
+      /* ---------- nav ---------- */
+      .lp-nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: var(--lp-max);
+        margin: 0 auto;
+        padding: 18px clamp(20px, 5vw, 40px);
+        background: color-mix(in srgb, var(--bg) 88%, transparent);
+        backdrop-filter: blur(8px);
+      }
+      .lp-mark {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      .lp-nav-links { display: flex; align-items: center; gap: 22px; }
+      .lp-nav-links a {
+        font-size: 0.88rem;
+        color: var(--text-3);
+        text-decoration: none;
+        transition: color var(--t);
+      }
+      .lp-nav-links a:hover { color: var(--accent); }
+      .lp-nav-links button {
+        font: inherit;
+        color: var(--text-3);
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 4px 8px;
+        cursor: pointer;
+      }
+
+      /* ---------- hero ---------- */
+      .lp-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+        gap: clamp(28px, 5vw, 64px);
+        align-items: center;
+        max-width: var(--lp-max);
+        margin: 0 auto;
+        padding: clamp(40px, 9vh, 96px) clamp(20px, 5vw, 40px) clamp(40px, 8vh, 80px);
+      }
+      .lp-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-4);
+        margin: 0 0 1.1em;
+      }
+      .lp-hero h1 {
+        font-family: var(--font-display);
+        font-size: clamp(2.9rem, 7vw, 4.6rem);
+        font-weight: 600;
+        font-variation-settings: 'opsz' 120;
+        line-height: 0.98;
+        letter-spacing: -0.032em;
+        margin: 0 0 0.42em;
+      }
+      .lp-hero h1 em {
+        font-style: italic;
+        font-weight: 400;
+        color: var(--accent);
+      }
+      .lp-lede {
+        font-size: 1.06rem;
+        line-height: 1.6;
+        color: var(--text-2);
+        max-width: 46ch;
+        margin: 0 0 1.9em;
+      }
+      .lp-clarify {
+        max-width: 46ch;
+        margin: -0.9em 0 1.9em;
+        padding-left: 14px;
+        border-left: 2px solid var(--accent-subtle);
+        font-size: 0.94rem;
+        line-height: 1.6;
+        color: var(--text-3);
+      }
+      .lp-clarify strong { color: var(--text-2); font-weight: 600; }
+
+      .lp-lede code {
+        font-size: 0.9em;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.1em 0.32em;
+      }
+
+      .lp-cmd {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 11px 12px 11px 16px;
+        max-width: 420px;
+        box-shadow: var(--shadow-sm);
+      }
+      .lp-cmd code { flex: 1; font-size: 0.86rem; color: var(--text); }
+      .lp-cmd button {
+        font: inherit;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-3);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 4px 9px;
+        cursor: pointer;
+        transition: color var(--t), border-color var(--t);
+      }
+      .lp-cmd button:hover { color: var(--accent); border-color: var(--accent-subtle); }
+
+      .lp-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+      .lp-btn {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.92rem;
+        color: var(--text);
+        text-decoration: none;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 10px 18px;
+        transition: border-color var(--t), transform var(--t), background var(--t);
+      }
+      .lp-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
+      .lp-btn-primary {
+        color: #fff;
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      html[data-theme="dark"] .lp-btn-primary { color: #0c0d10; }
+      .lp-btn-primary:hover { background: var(--accent-hover); }
+
+      .lp-hero-vis { position: relative; }
+      .lp-hero-vis canvas {
+        width: 100%;
+        aspect-ratio: 1 / 0.92;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        box-shadow: var(--shadow-md);
+      }
+      .lp-vis-caption {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-4);
+        text-align: right;
+        margin: 10px 2px 0;
+      }
+
+      /* ---------- counters ---------- */
+      .lp-counters {
+        max-width: var(--lp-max);
+        margin: 0 auto;
+        padding: 0 clamp(20px, 5vw, 40px) 20px;
+      }
+      .lp-counters dl {
+        display: flex;
+        flex-wrap: wrap;
+        gap: clamp(24px, 6vw, 64px);
+        margin: 0;
+        padding: 22px 26px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+      }
+      .lp-counters dt {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-4);
+      }
+      .lp-counters dd {
+        font-family: var(--font-display);
+        font-size: 1.7rem;
+        font-weight: 600;
+        margin: 4px 0 0;
+      }
+      .lp-counters-note { font-size: 0.78rem; color: var(--text-4); margin: 12px 4px 0; }
+
+      /* ---------- sections ---------- */
+      .lp-section {
+        max-width: var(--lp-max);
+        margin: 0 auto;
+        padding: clamp(48px, 9vh, 96px) clamp(20px, 5vw, 40px);
+      }
+      .lp-label {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-4);
+        margin: 0 0 0.9em;
+      }
+      .lp-section h2 {
+        font-family: var(--font-display);
+        font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+        font-weight: 600;
+        font-variation-settings: 'opsz' 60;
+        letter-spacing: -0.024em;
+        line-height: 1.15;
+        margin: 0 0 1em;
+      }
+      .lp-note { color: var(--text-3); max-width: 60ch; }
+      .lp-note em { color: var(--text-2); }
+
+      .lp-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+      }
+      .lp-card {
+        background: var(--surface);
+        padding: 26px 24px 28px;
+        transition: background var(--t);
+      }
+      .lp-card:hover { background: var(--bg-2); }
+      .lp-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: -0.012em;
+        margin: 0 0 0.5em;
+      }
+      .lp-card p { color: var(--text-3); font-size: 0.92rem; line-height: 1.6; margin: 0; }
+
+      .lp-split {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: clamp(32px, 6vw, 72px);
+      }
+      .lp-list { margin: 0; padding-left: 1.1em; }
+      .lp-list li { color: var(--text-2); margin: 0 0 0.85em; line-height: 1.6; }
+      .lp-list li::marker { color: var(--accent); }
+      .lp-list code {
+        font-size: 0.88em;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.08em 0.3em;
+      }
+
+      .lp-notfor { margin: 0; }
+      .lp-notfor > div { padding: 14px 0; border-top: 1px solid var(--border); }
+      .lp-notfor > div:first-child { border-top: 0; padding-top: 0; }
+      .lp-notfor dt { font-weight: 600; margin-bottom: 0.25em; }
+      .lp-notfor dd { margin: 0; color: var(--text-3); font-size: 0.93rem; line-height: 1.6; }
+
+      .lp-steps {
+        list-style: none;
+        counter-reset: step;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 28px;
+        margin: 0;
+        padding: 0;
+      }
+      .lp-steps li { counter-increment: step; }
+      .lp-steps h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1rem;
+        margin: 0 0 0.8em;
+      }
+      .lp-steps h3::before {
+        content: counter(step);
+        display: grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--accent);
+        background: var(--accent-ghost);
+        border: 1px solid var(--accent-subtle);
+        border-radius: 50%;
+      }
+      .lp-steps pre {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 13px 15px;
+        overflow-x: auto;
+        font-size: 0.8rem;
+        line-height: 1.55;
+        margin: 0 0 0.9em;
+      }
+      .lp-steps p { color: var(--text-3); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+      .lp-hosts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 16px;
+        margin-bottom: 26px;
+      }
+      .lp-host {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 18px 20px;
+        background: var(--surface);
+      }
+      .lp-host.is-best { border-color: var(--accent-subtle); background: var(--accent-ghost); }
+      .lp-host h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.98rem;
+        margin: 0 0 0.7em;
+      }
+      .lp-pill {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        border: 1px solid var(--accent-subtle);
+        border-radius: 999px;
+        padding: 2px 7px;
+      }
+      .lp-host code {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--text-2);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 6px 9px;
+        margin-bottom: 10px;
+        overflow-x: auto;
+      }
+      .lp-host p { font-size: 0.82rem; color: var(--text-3); margin: 0; line-height: 1.55; }
+
+      .lp-why .lp-list strong { color: var(--text); }
+
+      /* ---------- footer ---------- */
+      .lp-footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        justify-content: space-between;
+        align-items: flex-end;
+        max-width: var(--lp-max);
+        margin: 0 auto;
+        padding: 40px clamp(20px, 5vw, 40px) 64px;
+        border-top: 1px solid var(--border);
+      }
+      .lp-footer p { color: var(--text-4); font-size: 0.85rem; margin: 8px 0 0; }
+      .lp-footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
+      .lp-footer-links a {
+        font-size: 0.88rem;
+        color: var(--text-3);
+        text-decoration: none;
+      }
+      .lp-footer-links a:hover { color: var(--accent); }
+
+      @media (max-width: 860px) {
+        .lp-hero { grid-template-columns: minmax(0, 1fr); }
+        .lp-hero-vis { order: -1; max-width: 380px; }
+      }
+    </style>
+  </body>
+</html>

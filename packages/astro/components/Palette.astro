@@ -1,0 +1,197 @@
+---
+// The command palette. Its search runs the same `search()` from `obsidiary`
+// that the build uses — the core is isomorphic precisely so this is possible,
+// and so M3's live mode gets a working palette with no second implementation.
+---
+
+<div class="ob-palette-backdrop" id="ob-palette" data-open="false" role="dialog" aria-modal="true" aria-label="Search notes">
+  <div class="ob-palette">
+    <input
+      class="ob-palette-input"
+      id="ob-palette-input"
+      type="text"
+      placeholder="Search notes…"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      aria-controls="ob-results"
+    />
+    <ul class="ob-results" id="ob-results" role="listbox"></ul>
+    <div class="ob-palette-foot">
+      <span>↑↓ navigate</span>
+      <span>↵ open</span>
+      <span>esc close</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { search, type SearchDoc, type SearchHit } from 'obsidiary';
+
+  const backdrop = document.getElementById('ob-palette');
+  const input = document.getElementById('ob-palette-input') as HTMLInputElement | null;
+  const list = document.getElementById('ob-results');
+  if (backdrop && input && list) {
+    let docs: SearchDoc[] | null = null;
+    let loading: Promise<SearchDoc[]> | null = null;
+    let hits: Array<{ url: string; title: string }> = [];
+    let selected = 0;
+
+    const RECENT_KEY = 'obsidiary-recent';
+
+    const recent = (): string[] => {
+      try {
+        return JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]') as string[];
+      } catch {
+        return [];
+      }
+    };
+
+    const remember = (url: string): void => {
+      const next = [url, ...recent().filter((u) => u !== url)].slice(0, 8);
+      try {
+        localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {
+        // Private browsing — recents are a nicety, not a requirement.
+      }
+    };
+
+    // The index is only needed once someone actually searches, so it stays off
+    // the critical path for readers who never open the palette.
+    const load = (): Promise<SearchDoc[]> => {
+      if (docs) return Promise.resolve(docs);
+      loading ??= fetch('/search-index.json')
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data: SearchDoc[]) => {
+          docs = data;
+          return data;
+        })
+        .catch(() => {
+          docs = [];
+          return docs;
+        });
+      return loading;
+    };
+
+    const escape = (s: string): string =>
+      s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
+
+    const render = (results: SearchHit[], emptyQuery: boolean): void => {
+      hits = results.map((h) => ({ url: h.doc.url, title: h.doc.title }));
+      selected = 0;
+
+      if (results.length === 0) {
+        list.innerHTML = `<li class="ob-empty" style="padding:14px 12px">${
+          emptyQuery ? 'Start typing to search.' : 'No matches.'
+        }</li>`;
+        return;
+      }
+
+      list.innerHTML = results
+        .map((hit, i) => {
+          const sub = hit.heading ?? hit.snippet ?? hit.doc.summary;
+          const why = hit.kind === 'title' ? '' : `<span class="ob-result-why">${hit.kind}</span>`;
+          return `<li role="option" aria-selected="${i === 0}" class="ob-result" data-url="${escape(hit.doc.url)}">
+            <div class="ob-result-title"><span>${escape(hit.doc.title)}</span>${why}</div>
+            ${sub ? `<div class="ob-result-sub">${escape(sub)}</div>` : ''}
+            <div class="ob-result-path">${escape(hit.doc.path)}</div>
+          </li>`;
+        })
+        .join('');
+    };
+
+    const update = async (): Promise<void> => {
+      const query = input.value.trim();
+      const data = await load();
+
+      if (!query) {
+        const seen = recent();
+        const recents = seen
+          .map((url) => data.find((d) => d.url === url))
+          .filter((d): d is SearchDoc => Boolean(d));
+        const fallback = recents.length > 0 ? recents : data.slice(0, 8);
+        render(
+          fallback.map((doc) => ({ doc, score: 0, kind: 'title' as const })),
+          true,
+        );
+        return;
+      }
+      render(search(data, query, { limit: 20 }), false);
+    };
+
+    const highlight = (): void => {
+      const items = [...list.querySelectorAll<HTMLElement>('.ob-result')];
+      items.forEach((el, i) => el.setAttribute('aria-selected', String(i === selected)));
+      items[selected]?.scrollIntoView({ block: 'nearest' });
+    };
+
+    const open = (): void => {
+      backdrop.dataset.open = 'true';
+      input.value = '';
+      input.focus();
+      void update();
+    };
+
+    const close = (): void => {
+      backdrop.dataset.open = 'false';
+    };
+
+    const go = (index: number, newTab = false): void => {
+      const hit = hits[index];
+      if (!hit) return;
+      remember(hit.url);
+      if (newTab) window.open(hit.url, '_blank', 'noopener');
+      else location.href = hit.url;
+    };
+
+    input.addEventListener('input', () => void update());
+
+    list.addEventListener('click', (e) => {
+      const item = (e.target as HTMLElement).closest<HTMLElement>('.ob-result');
+      if (!item) return;
+      go([...list.querySelectorAll('.ob-result')].indexOf(item), e.metaKey || e.ctrlKey);
+    });
+
+    backdrop.addEventListener('mousedown', (e) => {
+      if (e.target === backdrop) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const isOpen = backdrop.dataset.open === 'true';
+      const target = e.target as HTMLElement | null;
+      const typing = /^(input|textarea|select)$/i.test(target?.tagName ?? '');
+
+      if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        isOpen ? close() : open();
+        return;
+      }
+      if (!isOpen && e.key === '/' && !typing) {
+        e.preventDefault();
+        open();
+        return;
+      }
+      if (!isOpen) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selected = Math.min(selected + 1, hits.length - 1);
+        highlight();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selected = Math.max(selected - 1, 0);
+        highlight();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        go(selected, e.metaKey || e.ctrlKey);
+      }
+    });
+
+    document.getElementById('ob-search-trigger')?.addEventListener('click', open);
+    // Record the current page so recents are useful on the next open.
+    remember(location.pathname);
+  }
+</script>

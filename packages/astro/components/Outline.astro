@@ -1,0 +1,31 @@
+---
+import type { Note } from 'obsidiary';
+
+interface Props {
+  note: Note;
+}
+
+const { note } = Astro.props;
+
+// A lone top-level H1 is the page title, already displayed — listing it in the
+// outline just wastes a row. Deeper than H4 is noise in a 248px rail.
+const h1s = note.headings.filter((h) => h.depth === 1).length;
+const headings = note.headings.filter((h) => h.depth <= 4 && !(h.depth === 1 && h1s === 1));
+---
+
+{
+  headings.length > 1 && (
+    <nav class="ob-panel" aria-label="On this page">
+      <p class="ob-panel-label">On this page</p>
+      <ul class="ob-outline" id="ob-outline">
+        {headings.map((h) => (
+          <li>
+            <a href={`#${h.slug}`} class={`d${h.depth}`} data-slug={h.slug}>
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}

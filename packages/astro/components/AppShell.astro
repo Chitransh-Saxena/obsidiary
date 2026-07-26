@@ -1,0 +1,287 @@
+---
+import '../styles/obsidiary.css';
+import '../styles/app.css';
+// Bundled rather than pulled from a CDN: no third-party request, no SRI to go
+// stale, and it works offline. katex ships as a transitive dep of the core.
+import 'katex/dist/katex.min.css';
+import { site } from 'virtual:obsidiary';
+import type { Note, Renderer } from 'obsidiary';
+import Sidebar from './Sidebar.astro';
+import Outline from './Outline.astro';
+import Backlinks from './Backlinks.astro';
+import Palette from './Palette.astro';
+import GraphView from './GraphView.astro';
+import CanvasView from './CanvasView.astro';
+
+interface Props {
+  note: Note;
+  /** Rendered note HTML from `renderer.renderNote(path)`. Empty for canvases. */
+  html: string;
+  /** Share the page renderer so canvas file nodes reuse its parse cache. */
+  renderer?: Renderer;
+}
+
+const { note, html, renderer } = Astro.props;
+const description = note.frontmatter.description;
+const summary = typeof description === 'string' ? description : site.description;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{note.title} · {site.title}</title>
+    <meta name="description" content={summary} />
+    <meta property="og:title" content={note.title} />
+    <meta property="og:description" content={summary} />
+    <meta property="og:type" content="article" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <script is:inline>
+      // Runs before first paint: a dark-mode reader must never see a white flash.
+      (() => {
+        const stored = localStorage.getItem('obsidiary-theme');
+        const prefers = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = stored || prefers;
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a href="#ob-main" class="ob-skip">Skip to content</a>
+
+    <header class="ob-topbar">
+      <button class="ob-iconbtn ob-menubtn" id="ob-menu" type="button" aria-label="Toggle sidebar" aria-expanded="false">☰</button>
+      <a class="ob-brand" href="/">{site.title}</a>
+      <div class="ob-spacer"></div>
+      <a class="ob-iconbtn" href="/graph" title="Vault graph" aria-label="Vault graph">◎</a>
+      <button class="ob-searchbtn" id="ob-search-trigger" type="button">
+        <span aria-hidden="true">⌕</span>
+        <span class="ob-searchbtn-label">Search notes</span>
+        <span class="ob-kbd">⌘K</span>
+      </button>
+      <button class="ob-iconbtn" id="ob-theme" type="button" aria-label="Toggle theme" title="Toggle theme (t)">◐</button>
+    </header>
+
+    <div class="ob-layout">
+      <Sidebar currentPath={note.path} />
+
+      <main class="ob-main" id="ob-main">
+        {note.kind === 'canvas' && <CanvasView note={note} renderer={renderer} />}
+        {/* An empty wrapper still carries the note's padding, which on a
+            slot-only page like /graph pushes the content below the fold. */}
+        {note.kind !== 'canvas' && html !== '' && (
+          <div class="obsidiary-note">
+            <article set:html={html} />
+          </div>
+        )}
+        <slot />
+      </main>
+
+      <div class="ob-rail">
+        <GraphView mode="local" currentPath={note.path} />
+        {note.path !== '' && <Outline note={note} />}
+        {note.path !== '' && <Backlinks currentPath={note.path} />}
+        <slot name="rail" />
+      </div>
+    </div>
+
+    <Palette />
+
+    <style is:global>
+      .ob-skip {
+        position: absolute;
+        left: -9999px;
+        top: 8px;
+        z-index: 200;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 8px 14px;
+      }
+      .ob-skip:focus { left: 12px; }
+    </style>
+
+    <script>
+      // ---------- theme ----------
+      const toggleTheme = (): void => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('obsidiary-theme', next);
+      };
+      document.getElementById('ob-theme')?.addEventListener('click', toggleTheme);
+
+      document.addEventListener('keydown', (e) => {
+        const tag = (e.target as HTMLElement | null)?.tagName ?? '';
+        const typing = /^(input|textarea|select)$/i.test(tag);
+        if (e.key === 't' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) toggleTheme();
+      });
+
+      // ---------- sidebar drawer ----------
+      const menu = document.getElementById('ob-menu');
+      const setSidebar = (open: boolean): void => {
+        document.body.dataset.sidebar = open ? 'open' : 'closed';
+        menu?.setAttribute('aria-expanded', String(open));
+      };
+      menu?.addEventListener('click', () =>
+        setSidebar(document.body.dataset.sidebar !== 'open'),
+      );
+      document.getElementById('ob-sidebar')?.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) setSidebar(false);
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.dataset.sidebar === 'open') setSidebar(false);
+      });
+
+      // ---------- folder collapse ----------
+      const TREE_KEY = 'obsidiary-tree';
+      const readOpen = (): Set<string> => {
+        try {
+          return new Set(JSON.parse(localStorage.getItem(TREE_KEY) ?? '[]') as string[]);
+        } catch {
+          return new Set();
+        }
+      };
+      const openFolders = readOpen();
+
+      document.querySelectorAll<HTMLLIElement>('.ob-folder').forEach((li) => {
+        const path = li.dataset.path ?? '';
+        // The server marked ancestors of the current note as open. Honour that
+        // without persisting it, or every visit would permanently expand more
+        // of the tree until nothing was ever collapsed again.
+        const isAncestor = li.dataset.open === 'true';
+        li.dataset.open = String(openFolders.has(path) || isAncestor);
+
+        li.querySelector<HTMLButtonElement>(':scope > .ob-folder-toggle')?.addEventListener(
+          'click',
+          () => {
+            const next = li.dataset.open !== 'true';
+            li.dataset.open = String(next);
+            li.querySelector(':scope > .ob-folder-toggle')?.setAttribute('aria-expanded', String(next));
+            next ? openFolders.add(path) : openFolders.delete(path);
+            try {
+              localStorage.setItem(TREE_KEY, JSON.stringify([...openFolders]));
+            } catch {
+              /* storage unavailable — collapse still works for this session */
+            }
+          },
+        );
+      });
+
+      // Keep the current note in view in a long tree.
+      document.querySelector('.ob-tree a[aria-current="page"]')?.scrollIntoView({ block: 'center' });
+
+      // ---------- outline scroll-spy ----------
+      const outlineLinks = [...document.querySelectorAll<HTMLAnchorElement>('#ob-outline a')];
+      if (outlineLinks.length > 0) {
+        const headings = outlineLinks
+          .map((a) => document.getElementById(a.dataset.slug ?? ''))
+          .filter((el): el is HTMLElement => Boolean(el));
+
+        let queued = false;
+        const spy = (): void => {
+          queued = false;
+          let activeIndex = 0;
+          for (let i = 0; i < headings.length; i++) {
+            const top = headings[i]?.getBoundingClientRect().top ?? 0;
+            if (top <= 120) activeIndex = i;
+            else break;
+          }
+          outlineLinks.forEach((a, i) => a.classList.toggle('is-active', i === activeIndex));
+        };
+        addEventListener(
+          'scroll',
+          () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(spy);
+          },
+          { passive: true },
+        );
+        spy();
+      }
+
+      // ---------- hover previews ----------
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        const cache = new Map<string, string | null>();
+        let popover: HTMLDivElement | null = null;
+        let showTimer: number | undefined;
+        let hideTimer: number | undefined;
+
+        const panel = (): HTMLDivElement => {
+          if (!popover) {
+            popover = document.createElement('div');
+            popover.className = 'ob-preview';
+            popover.dataset.show = 'false';
+            document.body.appendChild(popover);
+          }
+          return popover;
+        };
+
+        const fetchPreview = async (href: string): Promise<string | null> => {
+          if (cache.has(href)) return cache.get(href) ?? null;
+          try {
+            const res = await fetch(href);
+            if (!res.ok) throw new Error(String(res.status));
+            const parsed = new DOMParser().parseFromString(await res.text(), 'text/html');
+            const article = parsed.querySelector('.obsidiary-note article');
+            const html = article?.innerHTML ?? null;
+            cache.set(href, html);
+            return html;
+          } catch {
+            cache.set(href, null);
+            return null;
+          }
+        };
+
+        const hide = (): void => {
+          clearTimeout(showTimer);
+          hideTimer = window.setTimeout(() => {
+            if (popover) popover.dataset.show = 'false';
+          }, 120);
+        };
+
+        document.querySelectorAll<HTMLAnchorElement>('.obsidiary-note a.internal-link').forEach((link) => {
+          link.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimer);
+            const href = link.getAttribute('href')?.split('#')[0];
+            if (!href) return;
+
+            showTimer = window.setTimeout(async () => {
+              const html = await fetchPreview(href);
+              if (!html) return;
+
+              const el = panel();
+              el.innerHTML = html;
+
+              const rect = link.getBoundingClientRect();
+              const width = el.offsetWidth || 380;
+              const left = Math.min(
+                Math.max(8, rect.left + scrollX),
+                scrollX + innerWidth - width - 8,
+              );
+              // Flip above the link when the panel's full height won't fit
+              // below, then clamp so it can never run off the top either.
+              const height = el.offsetHeight || 320;
+              const below = innerHeight - rect.bottom > height + 16;
+              const top = below
+                ? rect.bottom + scrollY + 8
+                : rect.top + scrollY - height - 8;
+              el.style.left = `${left}px`;
+              el.style.top = `${Math.max(scrollY + 8, top)}px`;
+              el.dataset.show = 'true';
+            }, 350);
+          });
+
+          link.addEventListener('mouseleave', hide);
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "@obsidiary/demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@obsidiary/astro": "0.1.0",
+    "astro": "^6.4.7",
+    "obsidiary": "0.1.0"
+  }
+}

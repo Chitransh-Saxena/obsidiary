@@ -1,0 +1,338 @@
+---
+import { index } from 'virtual:obsidiary';
+import { fullGraph, neighborhood } from 'obsidiary';
+
+interface Props {
+  /** `local` shows the neighbourhood of `currentPath`; `global` shows the vault. */
+  mode?: 'local' | 'global';
+  currentPath?: string;
+  /** Hops from the current note, for local mode. */
+  depth?: number;
+  maxNodes?: number;
+  height?: number;
+  /** Hide the panel heading, e.g. on a full-page graph. */
+  bare?: boolean;
+}
+
+const {
+  mode = 'local',
+  currentPath = '',
+  depth = 1,
+  maxNodes = mode === 'global' ? 600 : 60,
+  height = mode === 'global' ? 620 : 208,
+  bare = false,
+} = Astro.props;
+
+const sub = mode === 'global' ? fullGraph(index, maxNodes) : neighborhood(index, currentPath, depth, maxNodes);
+
+const payload = {
+  current: currentPath,
+  nodes: sub.nodes.map((path) => ({
+    id: path,
+    title: index.notes[path]?.title ?? path,
+    url: index.notes[path]?.url ?? '#',
+    canvas: index.notes[path]?.kind === 'canvas',
+  })),
+  links: sub.links,
+  truncated: sub.truncated,
+};
+
+// A local graph of one lonely node is just a dot — not worth the space.
+const worthShowing = sub.nodes.length > 1;
+const id = `ob-graph-${Math.abs(hash(`${mode}:${currentPath}`))}`;
+
+function hash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return h;
+}
+---
+
+{
+  worthShowing && (
+    <section class={bare ? 'ob-graph-wrap is-bare' : 'ob-panel ob-graph-wrap'} aria-label="Graph">
+      {!bare && (
+        <p class="ob-panel-label">
+          {mode === 'global' ? 'Vault graph' : 'Local graph'}
+          {sub.truncated && ' · trimmed'}
+        </p>
+      )}
+      <div class="ob-graph" style={`height:${height}px`}>
+        <canvas id={id} data-graph={id}></canvas>
+        <script type="application/json" data-graph-for={id} set:html={JSON.stringify(payload)} />
+        <button class="ob-graph-reset" type="button" data-reset-for={id} title="Reset view">⤢</button>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  import { boundsOf, createSimulation } from 'obsidiary';
+
+  interface GraphNode { id: string; title: string; url: string; canvas: boolean }
+  interface Payload {
+    current: string;
+    nodes: GraphNode[];
+    links: Array<{ source: string; target: string }>;
+    truncated: boolean;
+  }
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLCanvasElement>('canvas[data-graph]').forEach((canvas) => {
+    const key = canvas.dataset.graph ?? '';
+    const raw = document.querySelector(`script[data-graph-for="${key}"]`)?.textContent;
+    if (!raw) return;
+
+    const data = JSON.parse(raw) as Payload;
+    const meta = new Map(data.nodes.map((n) => [n.id, n]));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const sim = createSimulation(
+      data.nodes.map((n) => n.id),
+      data.links,
+      // A small local graph wants to sit tight; a big one needs room to breathe.
+      data.nodes.length > 80 ? { linkDistance: 58, repulsion: 1400 } : {},
+    );
+    // Pin the note being read at the centre so the local graph is legible.
+    const focus = sim.nodes.find((n) => n.id === data.current);
+    if (focus) {
+      focus.x = 0;
+      focus.y = 0;
+      focus.fixed = true;
+    }
+
+    // Theme tokens, re-read whenever the theme flips.
+    let palette = readPalette();
+    function readPalette() {
+      const s = getComputedStyle(document.documentElement);
+      return {
+        node: s.getPropertyValue('--text-4').trim() || '#a3a3a3',
+        accent: s.getPropertyValue('--accent').trim() || '#2563eb',
+        edge: s.getPropertyValue('--border-strong').trim() || '#e0e0e0',
+        text: s.getPropertyValue('--text-3').trim() || '#737373',
+        strong: s.getPropertyValue('--text').trim() || '#111',
+      };
+    }
+    new MutationObserver(() => {
+      palette = readPalette();
+      draw();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    const view = { scale: 1, tx: 0, ty: 0 };
+    let hovered: string | null = null;
+    let width = 0;
+    let height = 0;
+
+    const neighbours = new Map<string, Set<string>>();
+    for (const link of data.links) {
+      if (!neighbours.has(link.source)) neighbours.set(link.source, new Set());
+      if (!neighbours.has(link.target)) neighbours.set(link.target, new Set());
+      neighbours.get(link.source)!.add(link.target);
+      neighbours.get(link.target)!.add(link.source);
+    }
+
+    const radiusOf = (degree: number): number => Math.min(11, 3.4 + Math.sqrt(degree) * 1.9);
+
+    function resize(): void {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = devicePixelRatio || 1;
+      width = rect.width;
+      height = rect.height;
+      canvas.width = Math.max(1, Math.round(width * dpr));
+      canvas.height = Math.max(1, Math.round(height * dpr));
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function fit(): void {
+      const b = boundsOf(sim.nodes, 26);
+      if (b.width === 0 || b.height === 0) {
+        view.scale = 1;
+        view.tx = width / 2;
+        view.ty = height / 2;
+        return;
+      }
+      // Cap the zoom so a two-node graph doesn't become two dinner plates,
+      // but leave enough headroom that a small vault fills its box.
+      view.scale = Math.min(width / b.width, height / b.height, 2.4);
+      view.tx = width / 2 - ((b.minX + b.maxX) / 2) * view.scale;
+      view.ty = height / 2 - ((b.minY + b.maxY) / 2) * view.scale;
+    }
+
+    const toScreen = (n: { x: number; y: number }) => ({
+      x: n.x * view.scale + view.tx,
+      y: n.y * view.scale + view.ty,
+    });
+
+    function draw(): void {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
+
+      const active = hovered ? new Set([hovered, ...(neighbours.get(hovered) ?? [])]) : null;
+
+      ctx.lineWidth = 1;
+      for (const link of sim.links) {
+        const a = sim.nodes.find((n) => n.id === link.source);
+        const b = sim.nodes.find((n) => n.id === link.target);
+        if (!a || !b) continue;
+        const lit = !active || (active.has(a.id) && active.has(b.id));
+        ctx.globalAlpha = lit ? 0.75 : 0.12;
+        ctx.strokeStyle = palette.edge;
+        const p1 = toScreen(a);
+        const p2 = toScreen(b);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+
+      const showAllLabels = sim.nodes.length <= 26;
+      for (const node of sim.nodes) {
+        const p = toScreen(node);
+        const isCurrent = node.id === data.current;
+        const lit = !active || active.has(node.id);
+
+        ctx.globalAlpha = lit ? 1 : 0.2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radiusOf(node.degree) * (isCurrent ? 1.35 : 1), 0, Math.PI * 2);
+        ctx.fillStyle = isCurrent || node.id === hovered ? palette.accent : palette.node;
+        ctx.fill();
+
+        if (showAllLabels || node.id === hovered || isCurrent) {
+          const info = meta.get(node.id);
+          if (info) {
+            ctx.globalAlpha = lit ? 1 : 0.15;
+            ctx.fillStyle = isCurrent || node.id === hovered ? palette.strong : palette.text;
+            ctx.font = '11px Inter, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const label = info.title.length > 22 ? `${info.title.slice(0, 21)}…` : info.title;
+            ctx.fillText(label, p.x, p.y + radiusOf(node.degree) + 4);
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function nodeAt(px: number, py: number): string | null {
+      for (const node of sim.nodes) {
+        const p = toScreen(node);
+        const r = radiusOf(node.degree) + 6;
+        if ((px - p.x) ** 2 + (py - p.y) ** 2 <= r * r) return node.id;
+      }
+      return null;
+    }
+
+    // ---------- interaction ----------
+    let dragging = false;
+    let moved = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    canvas.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      moved = false;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      if (dragging) {
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+        view.tx += dx;
+        view.ty += dy;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        draw();
+        return;
+      }
+      const next = nodeAt(e.clientX - rect.left, e.clientY - rect.top);
+      if (next !== hovered) {
+        hovered = next;
+        canvas.style.cursor = next ? 'pointer' : 'grab';
+        canvas.title = next ? (meta.get(next)?.title ?? '') : '';
+        draw();
+      }
+    });
+
+    const endDrag = (e: PointerEvent): void => {
+      if (dragging) canvas.releasePointerCapture(e.pointerId);
+      dragging = false;
+    };
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+    canvas.addEventListener('pointerleave', () => {
+      hovered = null;
+      draw();
+    });
+
+    canvas.addEventListener('click', (e) => {
+      // A click that panned the view is not a click on a node.
+      if (moved) return;
+      const rect = canvas.getBoundingClientRect();
+      const hit = nodeAt(e.clientX - rect.left, e.clientY - rect.top);
+      const url = hit ? meta.get(hit)?.url : null;
+      if (url && hit !== data.current) location.href = url;
+    });
+
+    canvas.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const factor = Math.exp(-e.deltaY * 0.0016);
+        const next = Math.min(6, Math.max(0.15, view.scale * factor));
+        // Keep the point under the cursor fixed while zooming.
+        view.tx = mx - ((mx - view.tx) / view.scale) * next;
+        view.ty = my - ((my - view.ty) / view.scale) * next;
+        view.scale = next;
+        draw();
+      },
+      { passive: false },
+    );
+
+    document.querySelector(`[data-reset-for="${key}"]`)?.addEventListener('click', () => {
+      fit();
+      draw();
+    });
+
+    // ---------- run ----------
+    resize();
+    if (reduceMotion) {
+      sim.run();
+      fit();
+      draw();
+    } else {
+      // Settle a little before the first paint so it doesn't start as a blob,
+      // then animate the rest — the motion is what makes the shape readable.
+      sim.run(40);
+      fit();
+      const step = (): void => {
+        const alive = sim.tick();
+        fit();
+        draw();
+        if (alive) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+
+    let resizeQueued = false;
+    new ResizeObserver(() => {
+      if (resizeQueued) return;
+      resizeQueued = true;
+      requestAnimationFrame(() => {
+        resizeQueued = false;
+        resize();
+        fit();
+        draw();
+      });
+    }).observe(canvas);
+  });
+</script>

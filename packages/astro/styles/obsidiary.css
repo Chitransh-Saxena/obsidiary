@@ -1,0 +1,295 @@
+/* =============================================================================
+   Obsidiary — reading theme.
+   Calm by default: near-white canvas, one blue accent, 5px radii, no glare.
+   Light and dark ride the same tokens; dark is opt-in via html[data-theme].
+   ========================================================================== */
+
+:root {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --bg: #fafafa;
+  --bg-2: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #f5f5f5;
+  --border: #ebebeb;
+  --border-strong: #e0e0e0;
+
+  --text: #111111;
+  --text-2: #404040;
+  --text-3: #737373;
+  --text-4: #a3a3a3;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-subtle: #dbeafe;
+  --accent-ghost: rgba(37, 99, 235, 0.08);
+
+  --green: #16a34a;  --green-subtle: #f0fdf4;
+  --amber: #b45309;  --amber-subtle: #fef8ec;
+  --red: #dc2626;    --red-subtle: #fef2f2;
+  --teal: #0d9488;   --teal-subtle: #f0fdfa;
+  --violet: #7c3aed; --violet-subtle: #f5f0ff;
+
+  --radius: 5px;
+  --radius-sm: 3px;
+  --radius-lg: 9px;
+
+  --shadow-xs: 0 1px 2px rgba(17, 17, 17, 0.05);
+  --shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.04), 0 2px 6px rgba(17, 17, 17, 0.05);
+  --shadow-md: 0 6px 20px rgba(17, 17, 17, 0.07), 0 2px 6px rgba(17, 17, 17, 0.05);
+
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --t: 150ms var(--ease-soft);
+
+  --measure: 68ch;
+}
+
+html[data-theme="dark"] {
+  --bg: #0c0d10;
+  --bg-2: #0e0f13;
+  --surface: #15161b;
+  --surface-2: #1a1c22;
+  --border: #262932;
+  --border-strong: #333743;
+
+  --text: #f2f3f5;
+  --text-2: #c3c7d0;
+  --text-3: #9297a3;
+  --text-4: #666b77;
+
+  --accent: #6191ff;
+  --accent-hover: #83a8ff;
+  --accent-subtle: rgba(97, 145, 255, 0.16);
+  --accent-ghost: rgba(97, 145, 255, 0.1);
+
+  --green: #4ade80;  --green-subtle: rgba(74, 222, 128, 0.12);
+  --amber: #fbbf24;  --amber-subtle: rgba(251, 191, 36, 0.12);
+  --red: #f87171;    --red-subtle: rgba(248, 113, 113, 0.12);
+  --teal: #2dd4bf;   --teal-subtle: rgba(45, 212, 191, 0.12);
+  --violet: #a78bfa; --violet-subtle: rgba(167, 139, 250, 0.14);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.68;
+  letter-spacing: -0.006em;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background var(--t), color var(--t);
+}
+
+img, svg, video, canvas { display: block; max-width: 100%; }
+a { color: inherit; }
+
+/* ---------- note ---------- */
+.obsidiary-note {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 72px) clamp(20px, 5vw, 40px) 25vh;
+}
+
+.obsidiary-note h1,
+.obsidiary-note h2,
+.obsidiary-note h3,
+.obsidiary-note h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
+  margin: 2em 0 0.6em;
+  scroll-margin-top: 2rem;
+}
+.obsidiary-note h1 { font-size: 2.05rem; margin-top: 0; }
+.obsidiary-note h2 { font-size: 1.5rem; }
+.obsidiary-note h3 { font-size: 1.2rem; }
+.obsidiary-note h4 { font-size: 1.02rem; }
+
+.obsidiary-note p { margin: 0 0 1.15em; }
+.obsidiary-note ul, .obsidiary-note ol { margin: 0 0 1.15em; padding-left: 1.4em; }
+.obsidiary-note li { margin: 0.28em 0; }
+.obsidiary-note li::marker { color: var(--text-4); }
+
+.obsidiary-note hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2.4em 0;
+}
+
+.obsidiary-note blockquote {
+  margin: 0 0 1.15em;
+  padding: 0.1em 0 0.1em 1.1em;
+  border-left: 2px solid var(--border-strong);
+  color: var(--text-2);
+}
+
+.obsidiary-note code {
+  font-family: var(--font-mono);
+  font-size: 0.87em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.12em 0.36em;
+}
+
+.obsidiary-note pre {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0 0 1.3em;
+}
+.obsidiary-note pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.84em;
+  line-height: 1.6;
+}
+
+.obsidiary-note table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.4em;
+  font-size: 0.94em;
+}
+.obsidiary-note th, .obsidiary-note td {
+  border: 1px solid var(--border);
+  padding: 7px 11px;
+  text-align: left;
+}
+.obsidiary-note th { background: var(--surface-2); font-weight: 600; }
+
+.obsidiary-note img { border-radius: var(--radius); margin: 0.4em 0 1.2em; }
+
+.obsidiary-note input[type="checkbox"] {
+  margin-right: 0.5em;
+  accent-color: var(--accent);
+}
+
+/* ---------- links ---------- */
+.obsidiary-note a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-subtle);
+  transition: border-color var(--t), color var(--t);
+}
+.obsidiary-note a:hover {
+  color: var(--accent-hover);
+  border-bottom-color: currentColor;
+}
+
+.internal-link.is-alias { border-bottom-style: dashed; }
+
+/* A link to a note that doesn't exist yet: visible, but clearly not clickable. */
+.internal-link.is-unresolved {
+  color: var(--text-4);
+  border-bottom: 1px dashed var(--border-strong);
+  cursor: help;
+  font-style: normal;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-color: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.08em 0.4em;
+  white-space: nowrap;
+}
+.tag:hover { color: var(--accent); border-color: var(--accent-subtle); }
+
+/* ---------- callouts ---------- */
+.callout {
+  margin: 0 0 1.35em;
+  padding: 13px 16px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--callout-color, var(--accent));
+  border-radius: var(--radius);
+  background: var(--callout-bg, var(--accent-ghost));
+}
+.callout-title {
+  font-weight: 600;
+  font-size: 0.93em;
+  letter-spacing: -0.01em;
+  color: var(--callout-color, var(--accent));
+  margin-bottom: 0.35em;
+}
+details.callout > summary.callout-title {
+  cursor: pointer;
+  list-style: none;
+  margin-bottom: 0;
+}
+details.callout[open] > summary.callout-title { margin-bottom: 0.5em; }
+details.callout > summary::-webkit-details-marker { display: none; }
+details.callout > summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.45em;
+  transition: transform var(--t);
+  font-size: 0.85em;
+}
+details.callout[open] > summary::before { transform: rotate(90deg); }
+
+.callout-content > :last-child { margin-bottom: 0; }
+.callout-content { border: 0; padding: 0; color: inherit; }
+
+.callout-note,    .callout-info    { --callout-color: var(--accent); --callout-bg: var(--accent-ghost); }
+.callout-abstract, .callout-quote  { --callout-color: var(--text-3); --callout-bg: var(--surface-2); }
+.callout-tip,     .callout-example { --callout-color: var(--teal);   --callout-bg: var(--teal-subtle); }
+.callout-success, .callout-todo    { --callout-color: var(--green);  --callout-bg: var(--green-subtle); }
+.callout-warning, .callout-question{ --callout-color: var(--amber);  --callout-bg: var(--amber-subtle); }
+.callout-danger,  .callout-failure,
+.callout-bug                       { --callout-color: var(--red);    --callout-bg: var(--red-subtle); }
+
+/* ---------- embeds / transclusion ---------- */
+.obsidiary-embed {
+  margin: 0 0 1.35em;
+  padding: 4px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+.obsidiary-embed > :first-child { margin-top: 0.8em; }
+.obsidiary-embed > :last-child { margin-bottom: 0.9em; }
+.obsidiary-embed h1 { font-size: 1.35rem; }
+.obsidiary-embed h2 { font-size: 1.15rem; }
+.obsidiary-embed .obsidiary-embed { background: var(--bg-2); }
+
+.obsidiary-pdf {
+  width: 100%;
+  height: 70vh;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0 0 1.35em;
+}
+
+audio, video { width: 100%; margin: 0 0 1.35em; }
+
+/* A paragraph carrying a block anchor, when linked to. */
+[data-block-id]:target {
+  background: var(--accent-ghost);
+  box-shadow: 0 0 0 6px var(--accent-ghost);
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+}

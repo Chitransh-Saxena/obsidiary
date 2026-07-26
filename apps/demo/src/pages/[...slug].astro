@@ -1,0 +1,19 @@
+---
+import { listNotes } from 'obsidiary';
+import AppShell from '@obsidiary/astro/components/AppShell.astro';
+import { index, renderer } from '../lib/vault';
+
+export function getStaticPaths() {
+  return listNotes(index).map((note) => ({
+    // The root note (`index.md`) slugs to '' — Astro wants undefined for `/`.
+    params: { slug: note.slug || undefined },
+    props: { path: note.path },
+  }));
+}
+
+const { path } = Astro.props;
+const note = index.notes[path]!;
+const html = renderer.renderNote(path);
+---
+
+<AppShell note={note} html={html} renderer={renderer} />

@@ -1,0 +1,29 @@
+{
+  "name": "@obsidiary/astro",
+  "version": "0.1.0",
+  "description": "Astro integration for Obsidiary — point it at a vault directory and get a site.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./styles.css": "./styles/obsidiary.css",
+    "./app.css": "./styles/app.css",
+    "./components/*": "./components/*",
+    "./routes/*": "./routes/*"
+  },
+  "files": ["dist", "styles", "components", "routes", "README.md"],
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "obsidiary": "0.1.0"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0 || ^6.0.0"
+  }
+}

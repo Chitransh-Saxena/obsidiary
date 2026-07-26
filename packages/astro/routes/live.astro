@@ -1,0 +1,337 @@
+---
+/**
+ * `/live` — point it at any public Obsidian vault on GitHub and read it.
+ *
+ * No build, no deploy, no account. The entire engine — resolver, markdown
+ * pipeline, transclusion, search — runs in the browser here, using the exact
+ * same code the static build uses. That is the whole reason the core was kept
+ * free of `node:*` imports from the first commit.
+ */
+import '../styles/obsidiary.css';
+import '../styles/app.css';
+import 'katex/dist/katex.min.css';
+import { site } from 'virtual:obsidiary';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live · {site.title}</title>
+    <meta name="description" content="Render any public Obsidian vault on GitHub, instantly, in your browser." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem('obsidiary-theme');
+        const prefers = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = stored || prefers;
+      })();
+    </script>
+  </head>
+
+  <body>
+    <header class="ob-topbar">
+      <a class="ob-brand" href="/">{site.title}</a>
+      <form class="ob-live-form" id="ob-live-form">
+        <input
+          class="ob-live-input"
+          id="ob-live-repo"
+          type="text"
+          placeholder="owner/repo — any public vault on GitHub"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="GitHub repository"
+        />
+        <button class="ob-iconbtn" type="submit">Render</button>
+      </form>
+      <button class="ob-iconbtn" id="ob-theme" type="button" aria-label="Toggle theme">◐</button>
+    </header>
+
+    <div class="ob-live-status" id="ob-live-status" hidden></div>
+
+    <div class="ob-layout" id="ob-live-layout" hidden>
+      <aside class="ob-sidebar">
+        <nav class="ob-panel">
+          <p class="ob-panel-label" id="ob-live-count"></p>
+          <input class="ob-live-filter" id="ob-live-filter" type="text" placeholder="Filter…" aria-label="Filter notes" />
+          <div class="ob-tree" id="ob-live-tree"></div>
+        </nav>
+      </aside>
+
+      <main class="ob-main">
+        <div class="obsidiary-note">
+          <article id="ob-live-note"></article>
+        </div>
+      </main>
+
+      <div class="ob-rail">
+        <section class="ob-panel">
+          <p class="ob-panel-label">Linked mentions</p>
+          <ul class="ob-backlinks" id="ob-live-backlinks"></ul>
+        </section>
+      </div>
+    </div>
+
+    <div class="ob-live-intro" id="ob-live-intro">
+      <h1>Read any vault, right now</h1>
+      <p>
+        Paste a public GitHub repository containing Obsidian markdown. Nothing is
+        built and nothing is uploaded — the whole engine runs in this tab.
+      </p>
+      <div class="ob-live-examples">
+        <span>Try:</span>
+        <button type="button" data-example="obsidiary/obsidiary/apps/demo/vault">the demo vault</button>
+      </div>
+      <p class="ob-live-note-small">
+        Large vaults take a moment: GitHub is asked once for the file list, then
+        each note is fetched from its CDN.
+      </p>
+    </div>
+
+    <style is:global>
+      .ob-live-form { flex: 1; display: flex; gap: 8px; max-width: 620px; }
+      .ob-live-input {
+        flex: 1;
+        font: inherit;
+        font-size: 0.86rem;
+        font-family: var(--font-mono);
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 6px 11px;
+        outline: none;
+      }
+      .ob-live-input:focus { border-color: var(--accent); }
+      .ob-live-filter {
+        width: 100%;
+        font: inherit;
+        font-size: 0.82rem;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 5px 8px;
+        margin-bottom: 10px;
+        outline: none;
+      }
+      .ob-live-status {
+        max-width: 620px;
+        margin: 40px auto;
+        padding: 14px 18px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        font-size: 0.9rem;
+        color: var(--text-2);
+      }
+      .ob-live-status.is-error { border-color: var(--red); color: var(--red); }
+      .ob-live-intro {
+        max-width: 620px;
+        margin: clamp(50px, 12vh, 130px) auto;
+        padding: 0 24px;
+      }
+      .ob-live-intro h1 {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.4em;
+      }
+      .ob-live-intro p { color: var(--text-2); margin: 0 0 1em; }
+      .ob-live-note-small { font-size: 0.85rem; color: var(--text-4); }
+      .ob-live-examples { display: flex; align-items: center; gap: 10px; margin: 1.4em 0; font-size: 0.88rem; color: var(--text-3); }
+      .ob-live-examples button {
+        font: inherit;
+        font-size: 0.85rem;
+        color: var(--accent);
+        background: var(--accent-ghost);
+        border: 1px solid var(--accent-subtle);
+        border-radius: var(--radius-sm);
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+    </style>
+
+    <script>
+      import {
+        buildFileTree,
+        buildVault,
+        createRenderer,
+        fetchVaultFiles,
+        flattenTree,
+        parseRepoRef,
+        type Note,
+        type VaultIndex,
+      } from 'obsidiary';
+
+      const form = document.getElementById('ob-live-form') as HTMLFormElement;
+      const input = document.getElementById('ob-live-repo') as HTMLInputElement;
+      const status = document.getElementById('ob-live-status')!;
+      const layout = document.getElementById('ob-live-layout')!;
+      const intro = document.getElementById('ob-live-intro')!;
+      const treeEl = document.getElementById('ob-live-tree')!;
+      const countEl = document.getElementById('ob-live-count')!;
+      const filterEl = document.getElementById('ob-live-filter') as HTMLInputElement;
+      const noteEl = document.getElementById('ob-live-note')!;
+      const backlinksEl = document.getElementById('ob-live-backlinks')!;
+
+      document.getElementById('ob-theme')?.addEventListener('click', () => {
+        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('obsidiary-theme', next);
+      });
+
+      let index: VaultIndex | null = null;
+      let renderer: ReturnType<typeof createRenderer> | null = null;
+      let ordered: Note[] = [];
+
+      const esc = (s: string): string =>
+        s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
+
+      function say(message: string, error = false): void {
+        status.hidden = false;
+        status.textContent = message;
+        status.classList.toggle('is-error', error);
+      }
+
+      function renderTree(filter = ''): void {
+        if (!index) return;
+        const needle = filter.trim().toLowerCase();
+        const visible = ordered.filter(
+          (n) => !needle || n.title.toLowerCase().includes(needle) || n.path.toLowerCase().includes(needle),
+        );
+        treeEl.innerHTML = `<ul>${visible
+          .map(
+            (n) =>
+              `<li><a href="#${encodeURIComponent(n.path)}" data-path="${esc(n.path)}"><span class="ob-name">${esc(n.title)}</span></a></li>`,
+          )
+          .join('')}</ul>`;
+      }
+
+      function show(path: string): void {
+        if (!index || !renderer) return;
+        const note = index.notes[path];
+        if (!note) return;
+
+        noteEl.innerHTML =
+          note.kind === 'canvas'
+            ? `<h1>${esc(note.title)}</h1><p class="ob-empty">Canvas files render on a built site; the live view shows their links only.</p>`
+            : renderer.renderNote(path);
+
+        const links = index.backlinks[path] ?? [];
+        const grouped = new Map<string, string | undefined>();
+        for (const b of links) if (!grouped.has(b.fromPath)) grouped.set(b.fromPath, b.context);
+
+        backlinksEl.innerHTML =
+          grouped.size === 0
+            ? '<li class="ob-empty">Nothing links here yet.</li>'
+            : [...grouped.entries()]
+                .map(
+                  ([from, context]) =>
+                    `<li class="ob-backlink"><a href="#${encodeURIComponent(from)}" data-path="${esc(from)}">${esc(
+                      index!.notes[from]?.title ?? from,
+                    )}</a>${context ? `<p class="ob-context">${esc(context)}</p>` : ''}</li>`,
+                )
+                .join('');
+
+        for (const el of document.querySelectorAll('[data-path]')) {
+          el.setAttribute('aria-current', el.getAttribute('data-path') === path ? 'page' : 'false');
+        }
+        scrollTo({ top: 0 });
+      }
+
+      // Internal links are hrefs into a site that doesn't exist here, so map
+      // them back onto vault paths and handle them in-page.
+      document.addEventListener('click', (e) => {
+        const el = (e.target as HTMLElement).closest<HTMLElement>('[data-path], a.internal-link');
+        if (!el || !index) return;
+
+        const direct = el.getAttribute('data-path');
+        if (direct) {
+          e.preventDefault();
+          show(direct);
+          location.hash = encodeURIComponent(direct);
+          return;
+        }
+        const target = el.getAttribute('data-note');
+        if (target && index.notes[target]) {
+          e.preventDefault();
+          show(target);
+          location.hash = encodeURIComponent(target);
+        }
+      });
+
+      filterEl.addEventListener('input', () => renderTree(filterEl.value));
+
+      async function load(spec: string): Promise<void> {
+        const ref = parseRepoRef(spec);
+        if (!ref) {
+          say('That does not look like a GitHub repository. Try “owner/repo”.', true);
+          return;
+        }
+
+        intro.hidden = true;
+        layout.hidden = true;
+        say(`Listing ${ref.owner}/${ref.repo}…`);
+
+        try {
+          const remote = await fetchVaultFiles(ref, {
+            onProgress: (done, total) => say(`Fetching notes… ${done}/${total}`),
+          });
+
+          index = buildVault(remote.files, {
+            assetBase: remote.rawBase,
+            preserveAssetPaths: true,
+          });
+          renderer = createRenderer(index);
+          ordered = flattenTree(buildFileTree(index))
+            .map((n) => index!.notes[n.path])
+            .filter((n): n is Note => Boolean(n));
+
+          if (ordered.length === 0) {
+            say('No markdown found in that repository.', true);
+            return;
+          }
+
+          countEl.textContent = `${ordered.length} notes${remote.truncated ? ' (trimmed)' : ''}`;
+          renderTree();
+          status.hidden = true;
+          layout.hidden = false;
+
+          const wanted = decodeURIComponent(location.hash.slice(1));
+          show(index.notes[wanted] ? wanted : (ordered[0]?.path ?? ''));
+
+          const url = new URL(location.href);
+          url.searchParams.set('repo', spec);
+          history.replaceState(null, '', url);
+        } catch (error) {
+          say(error instanceof Error ? error.message : 'Something went wrong.', true);
+        }
+      }
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        void load(input.value);
+      });
+
+      for (const button of document.querySelectorAll<HTMLButtonElement>('[data-example]')) {
+        button.addEventListener('click', () => {
+          input.value = button.dataset.example ?? '';
+          void load(input.value);
+        });
+      }
+
+      const initial = new URL(location.href).searchParams.get('repo');
+      if (initial) {
+        input.value = initial;
+        void load(initial);
+      }
+    </script>
+  </body>
+</html>

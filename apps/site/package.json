@@ -1,0 +1,20 @@
+{
+  "name": "@obsidiary/site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "deploy": "astro build && wrangler deploy"
+  },
+  "dependencies": {
+    "@obsidiary/astro": "0.1.0",
+    "astro": "^6.4.7",
+    "obsidiary": "0.1.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

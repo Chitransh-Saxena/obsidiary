@@ -1,0 +1,52 @@
+---
+import { index } from 'virtual:obsidiary';
+import type { Backlink } from 'obsidiary';
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+const backlinks: Backlink[] = index.backlinks[currentPath] ?? [];
+
+// One entry per source note. Several references from the same note collapse
+// into one card, keeping the first context we found.
+const grouped = new Map<string, { count: number; context?: string }>();
+for (const b of backlinks) {
+  const existing = grouped.get(b.fromPath);
+  if (existing) {
+    existing.count++;
+    if (!existing.context && b.context) existing.context = b.context;
+  } else {
+    grouped.set(b.fromPath, { count: 1, context: b.context });
+  }
+}
+
+const entries = [...grouped.entries()].sort((a, b) =>
+  (index.notes[a[0]]?.title ?? '').localeCompare(index.notes[b[0]]?.title ?? ''),
+);
+---
+
+<section class="ob-panel" aria-label="Linked mentions">
+  <p class="ob-panel-label">
+    Linked mentions{entries.length > 0 && ` · ${entries.length}`}
+  </p>
+
+  {
+    entries.length === 0 ? (
+      <p class="ob-empty">Nothing links here yet.</p>
+    ) : (
+      <ul class="ob-backlinks">
+        {entries.map(([path, { count, context }]) => (
+          <li class="ob-backlink">
+            <a href={index.notes[path]?.url}>
+              {index.notes[path]?.title ?? path}
+              {count > 1 && ` · ${count}`}
+            </a>
+            {context && <p class="ob-context">{context}</p>}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</section>

@@ -1,0 +1,59 @@
+# Deploy to GitHub Pages.
+#
+# Before the first run: Settings → Pages → Source → "GitHub Actions".
+#
+# If you are publishing to `<user>.github.io/<repo>` rather than a custom domain
+# or a `<user>.github.io` repo, the site lives under a subpath and Astro must be
+# told. Add to astro.config.mjs:
+#
+#   site: 'https://<user>.github.io',
+#   base: '/<repo>',
+#
+# Skipping that is the single most common reason a GitHub Pages deploy renders
+# an unstyled, link-broken page.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          # Only needed for a remote `repo:` vault, to lift the GitHub API rate
+          # limit. The default token is created automatically.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

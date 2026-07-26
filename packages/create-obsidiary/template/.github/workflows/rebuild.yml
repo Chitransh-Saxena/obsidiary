@@ -1,0 +1,42 @@
+# Keep a remote vault fresh.
+#
+# Only needed when your notes live in a *different* repository (`repo:` in
+# astro.config.mjs). A vault inside this repo rebuilds on push automatically.
+#
+# This runs on a schedule and needs no secrets in your notes repository — which
+# is the point. If you want instant rebuilds instead of hourly ones, add a
+# `repository_dispatch` trigger below and have the notes repo call it.
+
+name: Rebuild from notes
+
+on:
+  schedule:
+    # Hourly. Cron on GitHub is best-effort and can lag by several minutes.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [notes-updated]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - uses: actions/deploy-pages@v4

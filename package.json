@@ -1,0 +1,27 @@
+{
+  "name": "obsidiary-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Obsidiary — publish any Obsidian vault as a fast, linked, free website.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --build packages/core packages/astro",
+    "build": "npm run typecheck && npm run build --workspace @obsidiary/demo",
+    "dev": "npm run build --workspace @obsidiary/astro && npm run dev --workspace @obsidiary/demo"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

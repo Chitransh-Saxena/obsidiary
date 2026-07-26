@@ -1,0 +1,26 @@
+---
+import { index } from 'virtual:obsidiary';
+import { ancestorFolders, buildFileTree, noteCount } from 'obsidiary';
+import TreeItem from './TreeItem.astro';
+
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+const tree = buildFileTree(index);
+
+// Folders on the path to the current note start open, so a reader always sees
+// where they are. Client-side state layers on top of this.
+const open = ancestorFolders(currentPath);
+const total = noteCount(tree);
+---
+
+<aside class="ob-sidebar" id="ob-sidebar" aria-label="Notes">
+  <nav class="ob-panel">
+    <p class="ob-panel-label">{total} {total === 1 ? 'note' : 'notes'}</p>
+    <div class="ob-tree">
+      <TreeItem nodes={tree} currentPath={currentPath} open={open} />
+    </div>
+  </nav>
+</aside>

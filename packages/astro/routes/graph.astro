@@ -1,0 +1,40 @@
+---
+/**
+ * `/graph` — the whole vault at once. Injected by the integration, so every
+ * site gets it without adding a page.
+ */
+import type { Note } from 'obsidiary';
+import AppShell from '../components/AppShell.astro';
+import GraphView from '../components/GraphView.astro';
+
+export const prerender = true;
+
+// A synthetic note: the shell wants one, and this page has no vault entry.
+// An empty path means the sidebar highlights nothing and the panels stay quiet.
+const note: Note = {
+  kind: 'markdown',
+  path: '',
+  slug: 'graph',
+  url: '/graph',
+  basename: 'Graph',
+  folder: '',
+  title: 'Vault graph',
+  body: '',
+  frontmatter: {},
+  aliases: [],
+  tags: [],
+  headings: [],
+  blocks: [],
+  links: [],
+};
+---
+
+<AppShell note={note} html="">
+  <div class="ob-graph-page">
+    <h1>Vault graph</h1>
+    <p class="ob-graph-lede">
+      Every note, and every link between them. Click a node to open it; drag to pan, scroll to zoom.
+    </p>
+    <GraphView mode="global" height={620} bare />
+  </div>
+</AppShell>

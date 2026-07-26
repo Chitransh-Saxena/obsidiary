@@ -1,0 +1,98 @@
+{
+  "nodes": [
+    {
+      "id": "group-core",
+      "type": "group",
+      "label": "The awkward bits",
+      "x": -60,
+      "y": -80,
+      "width": 760,
+      "height": 560,
+      "color": "6"
+    },
+    {
+      "id": "intro",
+      "type": "text",
+      "text": "# A canvas is a note\n\nOrdinary Obsidian canvas JSON, rendered as a page. It links to [[Wikilinks]] like any other note, so it appears in the graph and in backlinks.",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 200,
+      "color": "5"
+    },
+    {
+      "id": "embed-links",
+      "type": "file",
+      "file": "Wikilinks.md",
+      "subpath": "#Ambiguity",
+      "x": 400,
+      "y": 0,
+      "width": 300,
+      "height": 210
+    },
+    {
+      "id": "note-callouts",
+      "type": "text",
+      "text": "File nodes are **real embeds** — the card on the right is the *Ambiguity* section of another note, sliced by its subpath.\n\n> [!tip] Same machinery\n> Canvas file nodes take the same path as `![[Note#Section]]`.",
+      "x": 0,
+      "y": 250,
+      "width": 320,
+      "height": 270,
+      "color": "4"
+    },
+    {
+      "id": "link-obsidian",
+      "type": "link",
+      "url": "https://jsoncanvas.org",
+      "x": 400,
+      "y": 250,
+      "width": 300,
+      "height": 60
+    },
+    {
+      "id": "aside",
+      "type": "text",
+      "text": "Groups sit behind everything. Edges attach to named sides and carry labels.",
+      "x": 400,
+      "y": 360,
+      "width": 300,
+      "height": 120,
+      "color": "2"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "intro",
+      "fromSide": "right",
+      "toNode": "embed-links",
+      "toSide": "left",
+      "label": "embeds",
+      "color": "5"
+    },
+    {
+      "id": "e2",
+      "fromNode": "intro",
+      "fromSide": "bottom",
+      "toNode": "note-callouts",
+      "toSide": "top"
+    },
+    {
+      "id": "e3",
+      "fromNode": "note-callouts",
+      "fromSide": "right",
+      "toNode": "link-obsidian",
+      "toSide": "left",
+      "label": "spec",
+      "color": "4"
+    },
+    {
+      "id": "e4",
+      "fromNode": "link-obsidian",
+      "fromSide": "bottom",
+      "toNode": "aside",
+      "toSide": "top",
+      "toEnd": "none"
+    }
+  ]
+}

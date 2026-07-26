@@ -1,0 +1,15 @@
+{
+  "name": "create-obsidiary",
+  "version": "0.1.0",
+  "description": "Scaffold a site that publishes your Obsidian vault. `npm create obsidiary@latest`",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "create-obsidiary": "./index.js"
+  },
+  "files": ["index.js", "template", "README.md"],
+  "keywords": ["obsidian", "publish", "digital-garden", "astro", "static-site"],
+  "engines": {
+    "node": ">=20"
+  }
+}

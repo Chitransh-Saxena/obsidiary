@@ -1,0 +1,196 @@
+---
+import { index } from 'virtual:obsidiary';
+import {
+  canvasColor,
+  createRenderer,
+  edgeGeometry,
+  parseCanvas,
+  sortForPaint,
+  type CanvasNode,
+  type Note,
+  type Renderer,
+} from 'obsidiary';
+
+interface Props {
+  note: Note;
+  /** Share the page's renderer so transcluded file nodes reuse its parse cache. */
+  renderer?: Renderer;
+}
+
+const { note, renderer = createRenderer(index) } = Astro.props;
+const doc = parseCanvas(note.body);
+const bounds = doc?.bounds;
+
+const byId = new Map<string, CanvasNode>((doc?.nodes ?? []).map((n) => [n.id, n]));
+
+// File nodes go back through the embed machinery, so subpath slicing, image
+// sizing and cycle guards all behave exactly as they do in a markdown note.
+function contentFor(node: CanvasNode): string {
+  if (node.type === 'text') return renderer.renderMarkdown(node.text, note.path);
+  if (node.type === 'file') {
+    return renderer.renderMarkdown(`![[${node.file}${node.subpath ?? ''}]]`, note.path);
+  }
+  return '';
+}
+
+const painted = sortForPaint(doc?.nodes ?? []);
+const edges = (doc?.edges ?? []).flatMap((edge) => {
+  const from = byId.get(edge.fromNode);
+  const to = byId.get(edge.toNode);
+  if (!from || !to) return [];
+  return [{ edge, geo: edgeGeometry(edge, from, to) }];
+});
+---
+
+{
+  !doc || !bounds ? (
+    <div class="obsidiary-note">
+      <p class="ob-empty">This canvas could not be read.</p>
+    </div>
+  ) : (
+    <div class="ob-canvas" data-canvas style={`--cw:${bounds.width}px;--ch:${bounds.height}px`}>
+      <div class="ob-canvas-bar">
+        <span class="ob-canvas-title">{note.title}</span>
+        <span class="ob-canvas-hint">drag to pan · scroll to zoom</span>
+        <button class="ob-iconbtn" type="button" data-canvas-fit title="Fit to view">⤢</button>
+      </div>
+
+      <div class="ob-canvas-viewport" data-canvas-viewport>
+        <div class="ob-canvas-world" data-canvas-world style={`width:${bounds.width}px;height:${bounds.height}px`}>
+          <svg
+            class="ob-canvas-edges"
+            width={bounds.width}
+            height={bounds.height}
+            viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
+          >
+            {edges.map(({ edge, geo }) => (
+              <g>
+                <path d={geo.d} fill="none" stroke={canvasColor(edge.color)} stroke-width="2" />
+                {edge.toEnd !== 'none' && (
+                  <polygon
+                    points="0,-5 11,0 0,5"
+                    fill={canvasColor(edge.color)}
+                    transform={`translate(${geo.end.x} ${geo.end.y}) rotate(${geo.endAngle})`}
+                  />
+                )}
+                {edge.label && (
+                  <text
+                    x={geo.mid.x}
+                    y={geo.mid.y}
+                    class="ob-canvas-edge-label"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                  >
+                    {edge.label}
+                  </text>
+                )}
+              </g>
+            ))}
+          </svg>
+
+          {painted.map((node) => {
+            const style = `left:${node.x - bounds.minX}px;top:${node.y - bounds.minY}px;width:${node.width}px;height:${node.height}px;--node-color:${canvasColor(node.color, 'var(--border)')}`;
+
+            if (node.type === 'group') {
+              return (
+                <div class="ob-canvas-node is-group" style={style}>
+                  {node.label && <span class="ob-canvas-group-label">{node.label}</span>}
+                </div>
+              );
+            }
+            if (node.type === 'link') {
+              return (
+                <a class="ob-canvas-node is-link" style={style} href={node.url} rel="noopener noreferrer" target="_blank">
+                  <span class="ob-canvas-url">{node.url}</span>
+                </a>
+              );
+            }
+            return (
+              <div class={`ob-canvas-node is-${node.type}`} style={style}>
+                <div class="ob-canvas-body obsidiary-note" set:html={contentFor(node)} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-canvas]').forEach((root) => {
+    const viewport = root.querySelector<HTMLElement>('[data-canvas-viewport]');
+    const world = root.querySelector<HTMLElement>('[data-canvas-world]');
+    if (!viewport || !world) return;
+
+    const view = { scale: 1, tx: 0, ty: 0 };
+
+    const apply = (): void => {
+      world.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`;
+    };
+
+    const fit = (): void => {
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      const cw = world.offsetWidth;
+      const ch = world.offsetHeight;
+      if (!cw || !ch) return;
+      // Never zoom past 1:1 — a small canvas blown up looks broken.
+      view.scale = Math.min(vw / cw, vh / ch, 1);
+      view.tx = (vw - cw * view.scale) / 2;
+      view.ty = (vh - ch * view.scale) / 2;
+      apply();
+    };
+
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    viewport.addEventListener('pointerdown', (e) => {
+      // Let clicks through to links and to text selection inside cards.
+      if ((e.target as HTMLElement).closest('a, .ob-canvas-body')) return;
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      viewport.setPointerCapture(e.pointerId);
+      viewport.style.cursor = 'grabbing';
+    });
+
+    viewport.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      view.tx += e.clientX - lastX;
+      view.ty += e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      apply();
+    });
+
+    const stop = (e: PointerEvent): void => {
+      if (dragging) viewport.releasePointerCapture(e.pointerId);
+      dragging = false;
+      viewport.style.cursor = '';
+    };
+    viewport.addEventListener('pointerup', stop);
+    viewport.addEventListener('pointercancel', stop);
+
+    viewport.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        const rect = viewport.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const next = Math.min(3, Math.max(0.1, view.scale * Math.exp(-e.deltaY * 0.0016)));
+        view.tx = mx - ((mx - view.tx) / view.scale) * next;
+        view.ty = my - ((my - view.ty) / view.scale) * next;
+        view.scale = next;
+        apply();
+      },
+      { passive: false },
+    );
+
+    root.querySelector('[data-canvas-fit]')?.addEventListener('click', fit);
+    new ResizeObserver(() => fit()).observe(viewport);
+    fit();
+  });
+</script>
