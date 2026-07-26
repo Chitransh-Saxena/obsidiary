@@ -1,7 +1,10 @@
 ---
 import '@obsidiary/astro/styles.css';
 
-const ADOPTION_URL = import.meta.env.PUBLIC_ADOPTION_URL ?? '';
+// Public endpoint, not a secret — the default keeps the counters working for
+// anyone who builds this site without configuring anything.
+const ADOPTION_URL =
+  import.meta.env.PUBLIC_ADOPTION_URL ?? 'https://obsidiary-adoption.chitransh-aang.workers.dev';
 const REPO = 'https://github.com/Chitransh-Saxena/obsidiary';
 
 const forAnyone = [
@@ -277,7 +280,9 @@ const hosts = [
             let any = false;
             for (const el of document.querySelectorAll('[data-counter]')) {
               const value = data[el.getAttribute('data-counter')];
-              if (typeof value === 'number') {
+              // A zero is honest but reads worse than silence on a new project.
+              // The strip appears by itself once there is something to show.
+              if (typeof value === 'number' && value > 0) {
                 el.textContent = value.toLocaleString();
                 any = true;
               } else {

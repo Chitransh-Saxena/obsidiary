@@ -4,9 +4,14 @@ Publish an Obsidian vault as a fast, linked, free website — with your notes
 living in their own repository, and upgrades that are `npm update` rather than a
 merge conflict.
 
-> **Status: early.** M0–M2 are done — parser, resolver, renderer, app shell,
-> search, graph view and `.canvas` rendering all work. Remote vaults, live mode
-> and the one-click deploy guide are not built yet. See [Roadmap](#roadmap).
+**[Site & docs](https://obsidiary.chitransh-aang.workers.dev)** ·
+**[Live demo](https://obsidiary.chitransh-aang.workers.dev/live)** — render any
+public vault in your browser ·
+**[A vault it publishes](https://chitransh-notes.chitransh-aang.workers.dev)**
+
+> **Status: working, not yet on npm.** Everything below runs. The packages have
+> not been published to the registry yet, so `npm create obsidiary@latest` will
+> not resolve until they are — clone the repo to try it today.
 
 ## Why another one
 
@@ -92,12 +97,41 @@ repulsion so large vaults stay cheap, and contains no `Math.random()` — the sa
 vault always lays out the same way, which is both less disorienting and
 testable.
 
-## Roadmap
-- **M3** — remote vaults, `vault-index.json`, in-browser live mode, the
-  "paste your repo URL" demo
-- **M4** — `npx create-obsidiary`, one-click deploy buttons, the step-by-step
-  free-hosting guide
-- **M5** — dogfood: a real vault, deployed
+## Deploy it free
+
+Full walkthrough: **[the setup guide](https://obsidiary.chitransh-aang.workers.dev/docs/setup)**.
+
+```bash
+npm create obsidiary@latest my-notes
+cd my-notes && npm install
+npx wrangler deploy
+```
+
+| Host | Bandwidth | Custom domain | Commercial use |
+| --- | --- | --- | --- |
+| **Cloudflare** (recommended) | unlimited | free | allowed |
+| Vercel | 100 GB | free | **not on free** |
+| Netlify | 100 GB | free | allowed |
+| GitHub Pages | 100 GB soft | free | **not on free** |
+
+## Notes in their own repository
+
+The configuration this exists for — the site is one repo, your notes are another:
+
+```js
+obsidiary({ repo: 'you/notes' })
+```
+
+One GitHub API call lists the vault; notes come from the CDN. Attachments are
+never downloaded — the built site points at them in place, so a vault full of
+photographs doesn't bloat your deploy.
+
+## Next
+
+- Publish `obsidiary`, `@obsidiary/astro` and `create-obsidiary` to npm, so
+  `npm create obsidiary@latest` resolves
+- Self-host the fonts instead of loading them from Google Fonts
+- Mermaid rendering; a tags browser; RSS
 
 ## A warning worth repeating
 
