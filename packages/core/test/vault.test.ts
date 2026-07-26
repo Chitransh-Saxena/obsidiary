@@ -40,6 +40,17 @@ describe('slugs and urls', () => {
     expect(index.notes['notes/My Great Note.md']?.slug).toBe('notes/my-great-note');
   });
 
+  it('collapses dashes and decorative punctuation out of slugs', () => {
+    const v = buildVault([
+      { path: 'FPV — The first build.md', content: 'x' },
+      { path: 'Photo – A note, plainly.md', content: 'x' },
+      { path: "Ann’s “quoted” note….md", content: 'x' },
+    ]);
+    expect(v.notes['FPV — The first build.md']?.slug).toBe('fpv-the-first-build');
+    expect(v.notes['Photo – A note, plainly.md']?.slug).toBe('photo-a-note-plainly');
+    expect(v.notes["Ann’s “quoted” note….md"]?.slug).toBe('anns-quoted-note');
+  });
+
   it('keeps non-latin filenames intact', () => {
     expect(index.notes['notes/日本語.md']?.slug).toBe('notes/日本語');
   });

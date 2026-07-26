@@ -1,9 +1,13 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "chitransh-notes",
+  "account_id": "a82a6302a28c6c2e55c2259f35d17683",
   "compatibility_date": "2026-01-01",
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page"
-  }
+  },
+  "workers_dev": false,
+  "routes": [{ "pattern": "notes.pulsar-projects.org", "custom_domain": true }],
+  "observability": { "enabled": true }
 }

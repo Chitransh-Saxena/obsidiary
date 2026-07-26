@@ -1,10 +1,11 @@
 ---
 import '@obsidiary/astro/styles.css';
+import Drollery from '../components/Drollery.astro';
 
 // Public endpoint, not a secret — the default keeps the counters working for
 // anyone who builds this site without configuring anything.
 const ADOPTION_URL =
-  import.meta.env.PUBLIC_ADOPTION_URL ?? 'https://obsidiary-adoption.chitransh-aang.workers.dev';
+  import.meta.env.PUBLIC_ADOPTION_URL ?? 'https://obsidiary-api.pulsar-projects.org';
 const REPO = 'https://github.com/Chitransh-Saxena/obsidiary';
 
 const forAnyone = [
@@ -18,41 +19,61 @@ const forAnyone = [
   },
   {
     title: 'Documentation that lives with the code',
-    body: 'Write docs in Obsidian, publish them from the repo they describe. No CMS, no export step, no second copy to drift.',
+    body: 'Write docs in Obsidian, publish them from the repository they describe. No CMS, no export step, no second copy to drift.',
   },
   {
-    title: 'Notes meant to be read, not just kept',
-    body: 'Course material, teaching notes, reading notes. Canvas files carry the diagrams; embeds mean you write a thing once and reuse it.',
+    title: 'Notes meant to be read, not merely kept',
+    body: 'Course material, teaching notes, reading notes. Canvas files carry the diagrams; embeds mean a thing is written once and reused.',
   },
   {
     title: 'Publishing a vault you do not own',
-    body: 'Point it at any public repo — a study group’s shared notes, a spec, someone’s open wiki. Nothing to fork, nothing to maintain.',
+    body: 'Point it at any public repository — a study group’s shared notes, a spec, someone’s open wiki. Nothing to fork, nothing to maintain.',
   },
   {
     title: 'Reading a vault with zero commitment',
-    body: 'The live view renders any public vault in your browser. No clone, no build, no account. Useful before you commit to anything.',
+    body: 'The live view renders any public vault in your browser. No clone, no build, no account. Useful before committing to anything.',
   },
 ];
 
 const forMe = [
-  'Engineering notes and everything I am currently figuring out, published at my own domain and linked from my portfolio.',
-  'FPV drone build logs — canvas files for wiring and frame layouts, embeds so a parts list is written once and reused across builds.',
-  'Guitar: song breakdowns, practice logs, the theory I keep having to re-learn.',
-  'Photography: shoot notes, settings that worked, gear I actually reach for.',
-  'Reading notes that feed the bookshelf on my site, instead of rotting in a folder.',
+  {
+    icon: 'aviator' as const,
+    label: 'a drone, hovering',
+    body: 'FPV drone build logs — canvas files for wiring and frame layouts, embeds so a parts list is written once and reused across every build.',
+  },
+  {
+    icon: 'lutenist' as const,
+    label: 'a figure playing a guitar',
+    body: 'Guitar: song breakdowns, practice logs, and the theory I keep having to re-learn from scratch.',
+  },
+  {
+    icon: 'juggler' as const,
+    label: 'a figure keeping a football up',
+    body: 'Football — the trivela, and why a ball bends the way it does. It became a whole other project once the notes got long enough.',
+  },
+  {
+    icon: 'limner' as const,
+    label: 'a camera',
+    body: 'Photography: shoot notes, the settings that worked, and gear assessed honestly after using it rather than after buying it.',
+  },
+  {
+    icon: 'reader' as const,
+    label: 'a book, its leaf turning',
+    body: 'Reading notes that feed the bookshelf on my portfolio, instead of rotting quietly in a folder.',
+  },
 ];
 
 const notFor = [
-  ['Private notes', 'A public repo means a public site. Selective publishing exists, but the safe answer is a separate private repo.'],
+  ['Private notes', 'A public repository means a public site. Selective publishing exists, but the safe answer is a separate private repository.'],
   ['Editing on the web', 'There is no web editor and there will not be one. Obsidian — or any text editor — is the editor.'],
   ['Being a blog engine', 'No comments, no newsletter, no scheduling. If you want a blog, write a blog.'],
 ];
 
 const hosts = [
-  ['Cloudflare', 'npx wrangler deploy', 'Unlimited bandwidth · free custom domain · commercial use allowed', true],
-  ['Vercel', 'import the repo', '100 GB · non-commercial only', false],
-  ['Netlify', 'import the repo', '100 GB · 300 build minutes', false],
-  ['GitHub Pages', 'Settings → Pages → Actions', '100 GB · non-commercial only · watch the base path', false],
+  ['Cloudflare', 'npx wrangler deploy', 'unlimited', 'free', 'allowed', true],
+  ['Vercel', 'import the repository', '100 GB', 'free', 'not on free', false],
+  ['Netlify', 'import the repository', '100 GB', 'free', 'allowed', false],
+  ['GitHub Pages', 'Settings → Pages → Actions', '100 GB soft', 'free', 'not on free', false],
 ];
 ---
 
@@ -60,7 +81,7 @@ const hosts = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Obsidiary — publish an Obsidian vault as a website</title>
+    <title>Obsidiary — a device for publishing private libraries</title>
     <meta
       name="description"
       content="Free and open source. Turn any Obsidian vault into a fast, linked, searchable website — with your notes in their own repository and upgrades that are npm update, not a merge conflict."
@@ -71,7 +92,7 @@ const hosts = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IM+Fell+English+SC&family=JetBrains+Mono:wght@400;500&display=swap"
     />
     <script is:inline>
       (() => {
@@ -82,93 +103,131 @@ const hosts = [
     </script>
   </head>
 
-  <body class="lp">
-    <nav class="lp-nav">
-      <span class="lp-mark">obsidiary</span>
-      <div class="lp-nav-links">
+  <body class="cx">
+    <div class="cx-grain" aria-hidden="true"></div>
+
+    <!-- ─────────── running head ─────────── -->
+    <header class="cx-head">
+      <span class="cx-head-l">Obsidiary</span>
+      <span class="cx-head-c">a device for the publishing of private libraries</span>
+      <nav class="cx-head-r">
         <a href="/docs">Docs</a>
-        <a href="/live">Live demo</a>
-        <a href={REPO}>GitHub</a>
-        <button id="lp-theme" type="button" aria-label="Toggle theme">◐</button>
-      </div>
-    </nav>
-
-    <header class="lp-hero">
-      <div class="lp-hero-copy">
-        <p class="lp-eyebrow" style="--i:0">Free · open source · MIT</p>
-        <h1 style="--i:1">
-          Your vault,<br /><em>on the web.</em>
-        </h1>
-        <p class="lp-lede" style="--i:2">
-          Obsidiary turns a folder of Obsidian markdown into a fast, linked, searchable
-          site — wikilinks, transclusion, callouts, backlinks, a graph, and
-          <code>.canvas</code> files that actually render.
-        </p>
-        <p class="lp-clarify" style="--i:3">
-          <strong>Obsidian stays your editor.</strong> This is only the other half —
-          the part that puts a vault on the web and makes it readable by someone who
-          doesn’t have your vault.
-        </p>
-
-        <div class="lp-cmd" style="--i:4">
-          <code id="lp-cmd-text">npm create obsidiary@latest</code>
-          <button id="lp-copy" type="button" aria-label="Copy command">copy</button>
-        </div>
-
-        <div class="lp-cta" style="--i:5">
-          <a class="lp-btn lp-btn-primary" href="/live">Try it on any repo →</a>
-          <a class="lp-btn" href="/docs">Read the guide</a>
-        </div>
-      </div>
-
-      <div class="lp-hero-vis" style="--i:6" aria-hidden="true">
-        <canvas id="lp-graph"></canvas>
-        <p class="lp-vis-caption">the graph engine, running</p>
-      </div>
+        <span class="cx-sep">·</span>
+        <a href="/live">Live</a>
+        <span class="cx-sep">·</span>
+        <a href={REPO}>Source</a>
+        <button id="cx-theme" type="button" aria-label="Toggle theme">☾</button>
+      </nav>
     </header>
 
-    <section class="lp-counters" id="lp-counters" hidden>
+    <!-- ─────────── title page ─────────── -->
+    <section class="cx-title">
+      <div class="cx-title-plate">
+        <hr class="cx-rule cx-rule--double" />
+        <p class="cx-imprint">Free · Open source · MIT</p>
+        <h1 class="cx-name">Obsidiary</h1>
+        <p class="cx-sub">
+          Whereby a folder of <i>Obsidian</i> markdown is made into a swift, linked and
+          searchable site: with <span class="cx-rub">wikilinks</span>,
+          <span class="cx-rub">transclusion</span>, <span class="cx-rub">callouts</span>,
+          <span class="cx-rub">backlinks</span>, a <span class="cx-rub">graph</span>, and
+          <code>.canvas</code> files that truly render.
+        </p>
+        <hr class="cx-rule" />
+        <p class="cx-standfirst">
+          <b>Obsidian stays your editor.</b> This is only the other half — the part that puts
+          a vault on the web and makes it legible to someone who does not have your vault.
+        </p>
+
+        <!-- the borrower's card -->
+        <div class="cx-card">
+          <div class="cx-card-head">
+            <span>Obsidiary · to install</span>
+            <span class="cx-callno">005.74 OBS</span>
+          </div>
+          <div class="cx-card-body">
+            <code id="cx-cmd">npm create obsidiary@latest</code>
+            <button id="cx-copy" type="button" aria-label="Copy command">copy</button>
+          </div>
+          <div class="cx-card-foot">
+            <a class="cx-go" href="/live">Read any vault, unbound &rarr;</a>
+            <a class="cx-quiet" href="/docs">The setter's guide</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- engraved plate -->
+      <figure class="cx-plate">
+        <div class="cx-plate-frame">
+          <canvas id="cx-graph"></canvas>
+        </div>
+        <figcaption>
+          <span class="cx-fig">Fig. I.</span> The link-graph of a small vault, drawn by the
+          engine itself.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ─────────── circulation record ─────────── -->
+    <section class="cx-circ" id="cx-circ" hidden>
+      <p class="cx-slip-label">Circulation record</p>
       <dl>
         <div><dt>stars</dt><dd data-counter="stars">—</dd></div>
         <div><dt>forks</dt><dd data-counter="forks">—</dd></div>
-        <div><dt>downloads / week</dt><dd data-counter="downloadsWeek">—</dd></div>
-        <div><dt>downloads / month</dt><dd data-counter="downloadsMonth">—</dd></div>
+        <div><dt>issued / week</dt><dd data-counter="downloadsWeek">—</dd></div>
+        <div><dt>issued / month</dt><dd data-counter="downloadsMonth">—</dd></div>
       </dl>
-      <p class="lp-counters-note">
-        Public data only — npm and GitHub. Obsidiary contains no telemetry.
-      </p>
+      <p class="cx-slip-note">Kept from public record only — npm and GitHub. This library keeps no telemetry.</p>
     </section>
 
-    <section class="lp-section" id="use-cases">
-      <p class="lp-label">What it is actually for</p>
-      <h2>Good reasons to use this</h2>
-      <div class="lp-cards">
+    <!-- ─────────── cap. I — the argument ─────────── -->
+    <section class="cx-chap">
+      <p class="cx-chapno">Cap. I</p>
+      <h2 class="cx-chaph">Of the uses to which it is fairly put</h2>
+      <hr class="cx-rule cx-rule--double" />
+
+      <div class="cx-cols">
+        <p class="cx-drop">
+          There are honest reasons to publish a vault and dishonest ones, and it is worth
+          saying plainly which are which before you spend an afternoon on it.
+        </p>
         {
-          forAnyone.map((item, i) => (
-            <article class="lp-card" style={`--i:${i}`}>
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
+          forAnyone.map((item) => (
+            <p class="cx-entry">
+              <span class="cx-entry-t">{item.title}.</span> {item.body}
+            </p>
           ))
         }
       </div>
+      <p class="cx-catch">and of the author's own use &rarr;</p>
     </section>
 
-    <section class="lp-section lp-split">
+    <!-- ─────────── cap. II — dogfood + honesty ─────────── -->
+    <section class="cx-chap cx-chap--two">
       <div>
-        <p class="lp-label">Dogfood</p>
-        <h2>What I use it for</h2>
-        <p class="lp-note">
-          I built this because I wanted it. These are the real vaults it runs.
+        <p class="cx-chapno">Cap. II</p>
+        <h2 class="cx-chaph">Of the author's own shelves</h2>
+        <hr class="cx-rule" />
+        <p class="cx-lead">
+          I built this because I wanted it. Engineering notes and whatever I am currently
+          figuring out live at my own domain; alongside them, these.
         </p>
-        <ul class="lp-list">
-          {forMe.map((item) => <li>{item}</li>)}
+        <ul class="cx-shelves">
+          {
+            forMe.map((item) => (
+              <li>
+                <Drollery name={item.icon} label={item.label} />
+                <p>{item.body}</p>
+              </li>
+            ))
+          }
         </ul>
       </div>
       <div>
-        <p class="lp-label">Honesty</p>
-        <h2>When not to use it</h2>
-        <dl class="lp-notfor">
+        <p class="cx-chapno cx-chapno--rub">Caveat</p>
+        <h2 class="cx-chaph">Wherein it will not serve</h2>
+        <hr class="cx-rule" />
+        <dl class="cx-caveats">
           {
             notFor.map(([title, body]) => (
               <div>
@@ -181,107 +240,134 @@ const hosts = [
       </div>
     </section>
 
-    <section class="lp-section">
-      <p class="lp-label">How it works</p>
-      <h2>Three files and a folder</h2>
-      <ol class="lp-steps">
+    <!-- ─────────── cap. III — the setting forth ─────────── -->
+    <section class="cx-chap">
+      <p class="cx-chapno">Cap. III</p>
+      <h2 class="cx-chaph">The setting-forth, in three motions</h2>
+      <hr class="cx-rule cx-rule--double" />
+
+      <ol class="cx-recipe">
         <li>
           <h3>Scaffold</h3>
           <pre><code>npm create obsidiary@latest my-notes</code></pre>
-          <p>Zero dependencies, one question: is your vault a local folder or a repo?</p>
+          <p>No dependencies, and a single question: is your vault a folder here, or a repository elsewhere?</p>
         </li>
         <li>
-          <h3>Point it at your notes</h3>
+          <h3>Point it at the notes</h3>
           <pre><code>{`obsidiary({
   vault: './vault',       // a folder here
   // repo: 'you/notes',   // …or its own repository
 })`}</code></pre>
-          <p>
-            Notes in their own repo is the whole idea — the engine is a dependency,
-            never a fork of your content.
-          </p>
+          <p>Notes in their own repository is the whole idea — the engine is a dependency, never a fork of your writing.</p>
         </li>
         <li>
-          <h3>Deploy</h3>
+          <h3>Set it forth</h3>
           <pre><code>npx wrangler deploy</code></pre>
-          <p>Or import the repo into Vercel or Netlify, or turn on GitHub Pages.</p>
+          <p>Or hand the repository to Vercel or Netlify, or turn on GitHub Pages.</p>
+        </li>
+      </ol>
+      <p class="cx-catch">a table of presses &rarr;</p>
+    </section>
+
+    <!-- ─────────── the table ─────────── -->
+    <section class="cx-chap">
+      <p class="cx-chapno">Tabula</p>
+      <h2 class="cx-chaph">Of presses that ask nothing</h2>
+      <hr class="cx-rule cx-rule--double" />
+
+      <table class="cx-table">
+        <thead>
+          <tr><th>Press</th><th>Command</th><th>Bandwidth</th><th>Domain</th><th>Commerce</th></tr>
+        </thead>
+        <tbody>
+          {
+            hosts.map(([name, cmd, bw, dom, com, best]) => (
+              <tr class={best ? 'is-best' : ''}>
+                <th scope="row">
+                  {name}
+                  {best && <span class="cx-mark">recommended</span>}
+                </th>
+                <td><code>{cmd}</code></td>
+                <td>{bw}</td>
+                <td>{dom}</td>
+                <td class={com === 'not on free' ? 'cx-no' : ''}>{com}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+      <p class="cx-foot-note">
+        Cloudflare is the recommendation: unlimited bandwidth, free custom domains, and no
+        restriction on commercial use. Vercel and GitHub Pages cap at 100 GB <i>and</i> forbid
+        commercial sites.
+      </p>
+    </section>
+
+    <!-- ─────────── the apology ─────────── -->
+    <section class="cx-chap cx-chap--apology">
+      <p class="cx-chapno cx-chapno--rub">Apologia</p>
+      <h2 class="cx-chaph">Quartz is good. Use it, unless…</h2>
+      <hr class="cx-rule" />
+      <ol class="cx-numbered">
+        <li>
+          <b>You want your notes in their own repository.</b> Quartz has no first-class support
+          for it; everyone hand-rolls a submodule. Here it is one line of configuration.
+        </li>
+        <li>
+          <b>You are weary of upgrade conflicts.</b> Quartz ships a <code>content/</code> folder
+          upstream, so most updates end in a merge inside your own writing. Distribution as a
+          package was proposed and declined. Here the engine is a dependency:
+          <code>npm update</code>, and nothing to resolve.
+        </li>
+        <li>
+          <b>You want it to feel like the application.</b> Sidebar, outline, backlinks with
+          context, ⌘K, hover previews, graph, canvas — not a documentation template.
         </li>
       </ol>
     </section>
 
-    <section class="lp-section">
-      <p class="lp-label">Deploy it free</p>
-      <h2>Every one of these costs nothing</h2>
-      <div class="lp-hosts">
-        {
-          hosts.map(([name, cmd, note, best]) => (
-            <div class={best ? 'lp-host is-best' : 'lp-host'}>
-              <h3>
-                {name}
-                {best && <span class="lp-pill">recommended</span>}
-              </h3>
-              <code>{cmd}</code>
-              <p>{note}</p>
-            </div>
-          ))
-        }
-      </div>
-      <p class="lp-note">
-        Cloudflare wins on the free tier: unlimited bandwidth, free custom domains,
-        and no restriction on commercial use. Vercel and GitHub Pages both cap at
-        100 GB <em>and</em> forbid commercial sites.
+    <!-- ─────────── colophon ─────────── -->
+    <footer class="cx-colophon">
+      <hr class="cx-rule cx-rule--double" />
+      <p class="cx-orn" aria-hidden="true">❦</p>
+
+      <p class="cx-thanks">
+        <span class="cx-thanks-t">With thanks.</span> Obsidiary exists because
+        <a href="https://obsidian.md">Obsidian</a> exists. The vault, the wikilink, the
+        canvas, and the whole idea of a local-first library that stays yours — all of it
+        is theirs, and this was built in admiration of it. Obsidiary is only a way to put
+        such a library on the web. It is not affiliated with, endorsed by, or a
+        replacement for Obsidian, and you should keep using Obsidian to write.
       </p>
-    </section>
 
-    <section class="lp-section lp-why">
-      <p class="lp-label">Why another one</p>
-      <h2>Quartz is good. Use it, unless…</h2>
-      <ul class="lp-list">
-        <li>
-          <strong>You want your notes in their own repository.</strong> Quartz has no
-          first-class support for it; everyone hand-rolls a submodule. Here it is one
-          config line.
-        </li>
-        <li>
-          <strong>You are tired of upgrade conflicts.</strong> Quartz ships a
-          <code>content/</code> folder upstream, so most <code>quartz update</code> runs
-          end in a merge. Distribution as a package was proposed and declined. Here the
-          engine is an npm dependency: <code>npm update</code>, nothing to resolve.
-        </li>
-        <li>
-          <strong>You want it to feel like the app.</strong> Sidebar, outline, backlinks
-          with context, ⌘K, hover previews, graph, canvas — not a docs template.
-        </li>
-      </ul>
-    </section>
-
-    <footer class="lp-footer">
-      <div>
-        <span class="lp-mark">obsidiary</span>
-        <p>MIT. Built by Chitransh Saxena.</p>
-      </div>
-      <div class="lp-footer-links">
+      <p class="cx-colo-body">
+        <span class="cx-colo-title">Colophon.</span> Obsidiary was written by
+        <b>Chitransh Saxena</b> and is given freely under the MIT licence. Set in
+        <i>Newsreader</i>, its optical size drawn afresh at each rank of type; with
+        initials and running heads in <i>IM&nbsp;Fell&nbsp;English</i>, cut by Peter de
+        Walpergen for John Fell in the seventeenth century. Composed in TypeScript,
+        impressed at Cloudflare's edge.
+      </p>
+      <nav class="cx-colo-links">
         <a href="/docs">Documentation</a>
-        <a href="/live">Live demo</a>
+        <a href="/live">Live view</a>
         <a href="/graph">Graph</a>
         <a href={REPO}>Source</a>
-      </div>
+      </nav>
     </footer>
 
     <script define:vars={{ ADOPTION_URL }}>
-      // Counters are decoration: if the endpoint is missing or down, the strip
-      // simply never appears rather than showing a row of dashes.
       if (ADOPTION_URL) {
         fetch(ADOPTION_URL)
           .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
             if (!data) return;
-            const strip = document.getElementById('lp-counters');
+            const strip = document.getElementById('cx-circ');
             let any = false;
             for (const el of document.querySelectorAll('[data-counter]')) {
               const value = data[el.getAttribute('data-counter')];
               // A zero is honest but reads worse than silence on a new project.
-              // The strip appears by itself once there is something to show.
+              // The record appears by itself once there is something to record.
               if (typeof value === 'number' && value > 0) {
                 el.textContent = value.toLocaleString();
                 any = true;
@@ -298,15 +384,15 @@ const hosts = [
     <script>
       import { boundsOf, createSimulation } from 'obsidiary';
 
-      document.getElementById('lp-theme')?.addEventListener('click', () => {
+      document.getElementById('cx-theme')?.addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.dataset.theme = next;
         localStorage.setItem('obsidiary-theme', next);
       });
 
-      const copyBtn = document.getElementById('lp-copy');
+      const copyBtn = document.getElementById('cx-copy');
       copyBtn?.addEventListener('click', async () => {
-        const text = document.getElementById('lp-cmd-text')?.textContent ?? '';
+        const text = document.getElementById('cx-cmd')?.textContent ?? '';
         try {
           await navigator.clipboard.writeText(text);
           copyBtn.textContent = 'copied';
@@ -316,9 +402,9 @@ const hosts = [
         }
       });
 
-      // The hero visual is the product's own force simulation — the same code
-      // that lays out a real vault's graph, on a hand-made miniature.
-      const canvas = document.getElementById('lp-graph') as HTMLCanvasElement | null;
+      // The plate is the product's own force simulation — the same code that
+      // lays out a real vault's graph, engraved here on a miniature.
+      const canvas = document.getElementById('cx-graph') as HTMLCanvasElement | null;
       const ctx = canvas?.getContext('2d');
       if (canvas && ctx) {
         const ids = [
@@ -349,9 +435,9 @@ const hosts = [
 
         const paint = () => {
           const s = getComputedStyle(document.documentElement);
-          const accent = s.getPropertyValue('--accent').trim() || '#2563eb';
-          const dim = s.getPropertyValue('--text-4').trim() || '#a3a3a3';
-          const edge = s.getPropertyValue('--border-strong').trim() || '#e0e0e0';
+          const rubric = s.getPropertyValue('--cx-rubric').trim() || '#9c2b21';
+          const ink = s.getPropertyValue('--cx-ink-3').trim() || '#6f6857';
+          const rule = s.getPropertyValue('--cx-rule').trim() || '#cfc5ae';
 
           const b = boundsOf(sim.nodes, 30);
           const scale = Math.min(w / (b.width || 1), h / (b.height || 1), 1.5);
@@ -360,9 +446,8 @@ const hosts = [
           const at = (n: { x: number; y: number }) => ({ x: n.x * scale + tx, y: n.y * scale + ty });
 
           ctx.clearRect(0, 0, w, h);
-          ctx.strokeStyle = edge;
-          ctx.globalAlpha = 0.7;
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = rule;
+          ctx.lineWidth = 0.9;
           for (const link of sim.links) {
             const a = sim.nodes.find((n) => n.id === link.source);
             const c = sim.nodes.find((n) => n.id === link.target);
@@ -374,13 +459,23 @@ const hosts = [
             ctx.lineTo(p2.x, p2.y);
             ctx.stroke();
           }
-          ctx.globalAlpha = 1;
+          // Engraved dots: an open ring, filled only for the focus — closer to a
+          // printed plate than the solid discs of a screen graph.
           for (const node of sim.nodes) {
             const p = at(node);
+            const r = Math.min(7.5, 3 + Math.sqrt(node.degree) * 1.5);
             ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.min(9, 3.6 + Math.sqrt(node.degree) * 1.8), 0, Math.PI * 2);
-            ctx.fillStyle = node.id === 'index' ? accent : dim;
-            ctx.fill();
+            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            if (node.id === 'index') {
+              ctx.fillStyle = rubric;
+              ctx.fill();
+            } else {
+              ctx.fillStyle = s.getPropertyValue('--cx-paper').trim() || '#f6f1e7';
+              ctx.fill();
+              ctx.strokeStyle = ink;
+              ctx.lineWidth = 1.1;
+              ctx.stroke();
+            }
           }
         };
 
@@ -411,405 +506,597 @@ const hosts = [
     <style is:global>
       [hidden] { display: none !important; }
 
-      .lp {
-        --lp-max: 1080px;
-        background:
-          radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0 / 26px 26px,
-          var(--bg);
+      /* ══════════ the leaf ══════════ */
+      :root {
+        --cx-paper: #f5f0e4;
+        --cx-paper-2: #ece5d4;
+        --cx-ink: #221f1a;
+        --cx-ink-2: #443e34;
+        --cx-ink-3: #6b6455;
+        --cx-ink-4: #8d8674;
+        --cx-rubric: #9c2b21;
+        --cx-rule: #cabfa6;
+        --cx-rule-soft: #ded4bd;
+
+        /* Newsreader rather than a Garamond revival: it carries a variable
+           optical-size axis, so the same family can be tuned per element instead
+           of one static cut doing every job. */
+        --cx-serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+        --cx-fell: "IM Fell English SC", "Newsreader", Georgia, serif;
+        --cx-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+        --cx-measure: 33rem;
+        --cx-page: 62rem;
       }
 
-      .lp code, .lp pre { font-family: var(--font-mono); }
-
-      /* ---------- reveal ---------- */
-      @keyframes lp-rise {
-        from { opacity: 0; transform: translateY(14px); }
-        to { opacity: 1; transform: none; }
-      }
-      .lp-hero [style*="--i"],
-      .lp-card {
-        animation: lp-rise 0.7s var(--ease-out) backwards;
-        animation-delay: calc(var(--i, 0) * 70ms + 60ms);
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .lp-hero [style*="--i"], .lp-card { animation: none; }
+      html[data-theme="dark"] {
+        --cx-paper: #15120d;
+        --cx-paper-2: #1c1813;
+        --cx-ink: #e9e1cf;
+        --cx-ink-2: #cdc4ae;
+        --cx-ink-3: #a09781;
+        --cx-ink-4: #7d745f;
+        --cx-rubric: #cf6049;
+        --cx-rule: #3d3629;
+        --cx-rule-soft: #2c261d;
       }
 
-      /* ---------- nav ---------- */
-      .lp-nav {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        max-width: var(--lp-max);
+      .cx {
+        margin: 0;
+        background: var(--cx-paper);
+        color: var(--cx-ink);
+        font-family: var(--cx-serif);
+        font-size: 19px;
+        line-height: 1.62;
+        font-feature-settings: "onum" 1, "kern" 1, "liga" 1;
+        font-optical-sizing: auto;
+        font-variation-settings: "opsz" 16;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* laid-paper grain, kept faint enough to feel like stock not noise */
+      .cx-grain {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.28;
+        mix-blend-mode: multiply;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      html[data-theme="dark"] .cx-grain { mix-blend-mode: screen; opacity: 0.05; }
+
+      .cx > *:not(.cx-grain) { position: relative; z-index: 1; }
+
+      .cx code { font-family: var(--cx-mono); font-size: 0.79em; }
+      .cx a { color: var(--cx-rubric); text-decoration: none; }
+      .cx a:hover { text-decoration: underline; text-underline-offset: 3px; }
+      .cx i, .cx em { font-style: italic; }
+
+      /* ══════════ rules ══════════ */
+      .cx-rule {
+        border: 0;
+        border-top: 1px solid var(--cx-rule);
+        margin: 1.4rem 0;
+      }
+      .cx-rule--double {
+        border-top: 3px double var(--cx-rule);
+        border-bottom: 0;
+        height: 0;
+      }
+
+      /* ══════════ running head ══════════ */
+      .cx-head {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: baseline;
+        gap: 18px;
+        max-width: var(--cx-page);
         margin: 0 auto;
-        padding: 18px clamp(20px, 5vw, 40px);
-        background: color-mix(in srgb, var(--bg) 88%, transparent);
-        backdrop-filter: blur(8px);
+        padding: 22px clamp(20px, 5vw, 34px) 12px;
+        border-bottom: 1px solid var(--cx-rule);
+        font-family: var(--cx-fell);
+        font-size: 0.72rem;
+        letter-spacing: 0.07em;
+        text-transform: lowercase;
       }
-      .lp-mark {
-        font-family: var(--font-mono);
-        font-size: 0.85rem;
-        letter-spacing: -0.02em;
-        color: var(--text);
-      }
-      .lp-nav-links { display: flex; align-items: center; gap: 22px; }
-      .lp-nav-links a {
-        font-size: 0.88rem;
-        color: var(--text-3);
-        text-decoration: none;
-        transition: color var(--t);
-      }
-      .lp-nav-links a:hover { color: var(--accent); }
-      .lp-nav-links button {
+      .cx-head-l { color: var(--cx-ink); }
+      .cx-head-c { color: var(--cx-ink-4); font-style: italic; text-align: center; }
+      .cx-head-r { justify-self: end; display: flex; align-items: baseline; gap: 8px; }
+      .cx-head-r a { color: var(--cx-ink-3); }
+      .cx-head-r a:hover { color: var(--cx-rubric); }
+      .cx-sep { color: var(--cx-rule); }
+      .cx-head-r button {
         font: inherit;
-        color: var(--text-3);
+        font-size: 0.85rem;
+        line-height: 1;
+        color: var(--cx-ink-3);
         background: none;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 4px 8px;
+        border: 1px solid var(--cx-rule);
+        border-radius: 2px;
+        padding: 3px 7px;
+        margin-left: 6px;
         cursor: pointer;
       }
+      .cx-head-r button:hover { color: var(--cx-rubric); border-color: var(--cx-rubric); }
 
-      /* ---------- hero ---------- */
-      .lp-hero {
+      /* ══════════ title page ══════════ */
+      .cx-title {
         display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-        gap: clamp(28px, 5vw, 64px);
-        align-items: center;
-        max-width: var(--lp-max);
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+        gap: clamp(30px, 5vw, 62px);
+        align-items: start;
+        max-width: var(--cx-page);
         margin: 0 auto;
-        padding: clamp(40px, 9vh, 96px) clamp(20px, 5vw, 40px) clamp(40px, 8vh, 80px);
+        padding: clamp(34px, 6vh, 62px) clamp(20px, 5vw, 34px) clamp(30px, 5vh, 54px);
       }
-      .lp-eyebrow {
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
+
+      .cx-imprint {
+        font-family: var(--cx-fell);
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--text-4);
-        margin: 0 0 1.1em;
+        color: var(--cx-ink-4);
+        text-align: center;
+        margin: 0.9rem 0 1.1rem;
       }
-      .lp-hero h1 {
-        font-family: var(--font-display);
-        font-size: clamp(2.9rem, 7vw, 4.6rem);
-        font-weight: 600;
-        font-variation-settings: 'opsz' 120;
-        line-height: 0.98;
-        letter-spacing: -0.032em;
-        margin: 0 0 0.42em;
-      }
-      .lp-hero h1 em {
-        font-style: italic;
+
+      /* The title is set at reading scale. Its authority comes from the rules
+         and the letterspacing, not from being enormous. */
+      .cx-name {
+        font-family: var(--cx-fell);
+        font-size: clamp(1.85rem, 3.6vw, 2.5rem);
         font-weight: 400;
-        color: var(--accent);
+        letter-spacing: 0.1em;
+        line-height: 1.1;
+        text-align: center;
+        color: var(--cx-ink);
+        margin: 0 0 0.55rem;
       }
-      .lp-lede {
-        font-size: 1.06rem;
+
+      .cx-sub {
+        font-size: 1.12rem;
+        line-height: 1.55;
+        text-align: center;
+        color: var(--cx-ink-2);
+        margin: 0 auto 0.2rem;
+        max-width: 30rem;
+        text-wrap: balance;
+        /* A high optical size gives the finer, higher-contrast cut a title page
+           wants — the same family, drawn for display rather than for reading. */
+        font-variation-settings: "opsz" 46;
+        font-weight: 380;
+        letter-spacing: 0.002em;
+      }
+      .cx-rub { color: var(--cx-rubric); font-style: italic; }
+
+      .cx-standfirst {
+        font-size: 0.95rem;
         line-height: 1.6;
-        color: var(--text-2);
-        max-width: 46ch;
-        margin: 0 0 1.9em;
-      }
-      .lp-clarify {
-        max-width: 46ch;
-        margin: -0.9em 0 1.9em;
+        color: var(--cx-ink-2);
+        border-left: 2px solid var(--cx-rubric);
         padding-left: 14px;
-        border-left: 2px solid var(--accent-subtle);
-        font-size: 0.94rem;
-        line-height: 1.6;
-        color: var(--text-3);
+        margin: 0 0 1.5rem;
       }
-      .lp-clarify strong { color: var(--text-2); font-weight: 600; }
+      .cx-standfirst b { font-weight: 600; color: var(--cx-ink); }
 
-      .lp-lede code {
-        font-size: 0.9em;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 0.1em 0.32em;
+      /* ── borrower's card ── */
+      .cx-card {
+        border: 1px solid var(--cx-rule);
+        background: var(--cx-paper-2);
+        box-shadow: 2px 3px 0 var(--cx-rule-soft);
       }
-
-      .lp-cmd {
+      .cx-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        padding: 7px 13px;
+        border-bottom: 1px solid var(--cx-rule);
+        font-family: var(--cx-fell);
+        font-size: 0.66rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cx-ink-4);
+      }
+      .cx-callno { font-family: var(--cx-mono); letter-spacing: 0.04em; }
+      .cx-card-body {
         display: flex;
         align-items: center;
         gap: 12px;
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius);
-        padding: 11px 12px 11px 16px;
-        max-width: 420px;
-        box-shadow: var(--shadow-sm);
+        padding: 13px;
+        /* ruled like a card, so the command sits on a printed line */
+        background-image: repeating-linear-gradient(
+          transparent 0 26px,
+          var(--cx-rule-soft) 26px 27px
+        );
       }
-      .lp-cmd code { flex: 1; font-size: 0.86rem; color: var(--text); }
-      .lp-cmd button {
-        font: inherit;
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-        color: var(--text-3);
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
+      .cx-card-body code { flex: 1; font-size: 0.83rem; color: var(--cx-ink); }
+      .cx-card-body button {
+        font-family: var(--cx-fell);
+        font-size: 0.66rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--cx-ink-3);
+        background: var(--cx-paper);
+        border: 1px solid var(--cx-rule);
+        border-radius: 2px;
         padding: 4px 9px;
         cursor: pointer;
-        transition: color var(--t), border-color var(--t);
       }
-      .lp-cmd button:hover { color: var(--accent); border-color: var(--accent-subtle); }
+      .cx-card-body button:hover { color: var(--cx-rubric); border-color: var(--cx-rubric); }
+      .cx-card-foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 13px;
+        border-top: 1px solid var(--cx-rule);
+        font-size: 0.86rem;
+      }
 
-      .lp-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
-      .lp-btn {
+      /* The chief action, inked like a stamp pressed onto the card.
+         Selector needs `.cx a.cx-go`: the base `.cx a` rule is (0,1,1) and would
+         otherwise win over a bare `.cx-go` (0,1,0), painting rubric on rubric. */
+      .cx a.cx-go {
         display: inline-flex;
         align-items: center;
-        font-size: 0.92rem;
-        color: var(--text);
-        text-decoration: none;
-        background: var(--surface);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius);
-        padding: 10px 18px;
-        transition: border-color var(--t), transform var(--t), background var(--t);
-      }
-      .lp-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
-      .lp-btn-primary {
-        color: #fff;
-        background: var(--accent);
-        border-color: var(--accent);
-      }
-      html[data-theme="dark"] .lp-btn-primary { color: #0c0d10; }
-      .lp-btn-primary:hover { background: var(--accent-hover); }
-
-      .lp-hero-vis { position: relative; }
-      .lp-hero-vis canvas {
-        width: 100%;
-        aspect-ratio: 1 / 0.92;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        background: color-mix(in srgb, var(--surface) 70%, transparent);
-        box-shadow: var(--shadow-md);
-      }
-      .lp-vis-caption {
-        font-family: var(--font-mono);
-        font-size: 0.68rem;
+        gap: 7px;
+        font-family: var(--cx-fell);
+        font-size: 0.72rem;
+        letter-spacing: 0.11em;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-4);
-        text-align: right;
-        margin: 10px 2px 0;
+        color: var(--cx-paper);
+        background: var(--cx-rubric);
+        border: 1px solid var(--cx-rubric);
+        border-radius: 2px;
+        padding: 9px 15px;
+        box-shadow: 2px 2px 0 color-mix(in srgb, var(--cx-rubric) 28%, transparent);
+        transition: transform 140ms ease, box-shadow 140ms ease;
+      }
+      .cx a.cx-go:hover {
+        color: var(--cx-paper);
+        text-decoration: none;
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 color-mix(in srgb, var(--cx-rubric) 40%, transparent);
+      }
+      .cx a.cx-go:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 transparent; }
+      .cx-quiet { font-style: italic; color: var(--cx-ink-3); }
+      .cx-quiet:hover { color: var(--cx-rubric); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cx a.cx-go, .cx a.cx-go:hover, .cx a.cx-go:active { transition: none; transform: none; }
       }
 
-      /* ---------- counters ---------- */
-      .lp-counters {
-        max-width: var(--lp-max);
-        margin: 0 auto;
-        padding: 0 clamp(20px, 5vw, 40px) 20px;
+      /* ── engraved plate ── */
+      .cx-plate { margin: 0; padding-top: 0.6rem; }
+      .cx-plate-frame {
+        border: 1px solid var(--cx-ink-3);
+        outline: 1px solid var(--cx-rule);
+        outline-offset: 3px;
+        background: var(--cx-paper-2);
+        padding: 10px;
       }
-      .lp-counters dl {
+      .cx-plate canvas {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1 / 0.94;
+      }
+      .cx-plate figcaption {
+        margin-top: 14px;
+        font-size: 0.84rem;
+        font-style: italic;
+        line-height: 1.5;
+        color: var(--cx-ink-3);
+        text-align: center;
+      }
+      .cx-fig {
+        font-family: var(--cx-fell);
+        font-style: normal;
+        letter-spacing: 0.06em;
+        color: var(--cx-ink-2);
+      }
+
+      /* ══════════ circulation record ══════════ */
+      .cx-circ {
+        max-width: var(--cx-page);
+        margin: 0 auto;
+        padding: 0 clamp(20px, 5vw, 34px) 30px;
+      }
+      .cx-slip-label, .cx-slip-note {
+        font-family: var(--cx-fell);
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--cx-ink-4);
+        margin: 0 0 10px;
+      }
+      .cx-slip-note { margin: 10px 0 0; letter-spacing: 0.06em; text-transform: none; font-style: italic; }
+      .cx-circ dl {
         display: flex;
         flex-wrap: wrap;
-        gap: clamp(24px, 6vw, 64px);
+        gap: clamp(20px, 5vw, 54px);
         margin: 0;
-        padding: 22px 26px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        background: var(--surface);
+        padding: 16px 20px;
+        border: 1px solid var(--cx-rule);
+        border-left: 3px double var(--cx-rule);
+        background: var(--cx-paper-2);
       }
-      .lp-counters dt {
-        font-family: var(--font-mono);
-        font-size: 0.68rem;
-        text-transform: uppercase;
+      .cx-circ dt {
+        font-family: var(--cx-fell);
+        font-size: 0.64rem;
         letter-spacing: 0.1em;
-        color: var(--text-4);
-      }
-      .lp-counters dd {
-        font-family: var(--font-display);
-        font-size: 1.7rem;
-        font-weight: 600;
-        margin: 4px 0 0;
-      }
-      .lp-counters-note { font-size: 0.78rem; color: var(--text-4); margin: 12px 4px 0; }
-
-      /* ---------- sections ---------- */
-      .lp-section {
-        max-width: var(--lp-max);
-        margin: 0 auto;
-        padding: clamp(48px, 9vh, 96px) clamp(20px, 5vw, 40px);
-      }
-      .lp-label {
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--text-4);
-        margin: 0 0 0.9em;
+        color: var(--cx-ink-4);
       }
-      .lp-section h2 {
-        font-family: var(--font-display);
-        font-size: clamp(1.7rem, 3.4vw, 2.4rem);
-        font-weight: 600;
-        font-variation-settings: 'opsz' 60;
-        letter-spacing: -0.024em;
-        line-height: 1.15;
-        margin: 0 0 1em;
-      }
-      .lp-note { color: var(--text-3); max-width: 60ch; }
-      .lp-note em { color: var(--text-2); }
-
-      .lp-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
-        gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-      }
-      .lp-card {
-        background: var(--surface);
-        padding: 26px 24px 28px;
-        transition: background var(--t);
-      }
-      .lp-card:hover { background: var(--bg-2); }
-      .lp-card h3 {
-        font-size: 1rem;
-        font-weight: 600;
-        letter-spacing: -0.012em;
-        margin: 0 0 0.5em;
-      }
-      .lp-card p { color: var(--text-3); font-size: 0.92rem; line-height: 1.6; margin: 0; }
-
-      .lp-split {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: clamp(32px, 6vw, 72px);
-      }
-      .lp-list { margin: 0; padding-left: 1.1em; }
-      .lp-list li { color: var(--text-2); margin: 0 0 0.85em; line-height: 1.6; }
-      .lp-list li::marker { color: var(--accent); }
-      .lp-list code {
-        font-size: 0.88em;
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 0.08em 0.3em;
+      .cx-circ dd {
+        font-family: var(--cx-fell);
+        font-size: 1.35rem;
+        margin: 2px 0 0;
+        color: var(--cx-ink);
       }
 
-      .lp-notfor { margin: 0; }
-      .lp-notfor > div { padding: 14px 0; border-top: 1px solid var(--border); }
-      .lp-notfor > div:first-child { border-top: 0; padding-top: 0; }
-      .lp-notfor dt { font-weight: 600; margin-bottom: 0.25em; }
-      .lp-notfor dd { margin: 0; color: var(--text-3); font-size: 0.93rem; line-height: 1.6; }
-
-      .lp-steps {
-        list-style: none;
-        counter-reset: step;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 28px;
+      /* ══════════ chapters ══════════ */
+      .cx-chap {
+        max-width: var(--cx-page);
+        margin: 0 auto;
+        padding: clamp(34px, 6vh, 58px) clamp(20px, 5vw, 34px);
+      }
+      .cx-chapno {
+        font-family: var(--cx-fell);
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--cx-ink-4);
+        margin: 0 0 0.3rem;
+      }
+      .cx-chapno--rub { color: var(--cx-rubric); }
+      .cx-chaph {
+        font-family: var(--cx-fell);
+        font-size: clamp(1.15rem, 2vw, 1.4rem);
+        font-weight: 400;
+        letter-spacing: 0.03em;
+        line-height: 1.25;
+        color: var(--cx-ink);
         margin: 0;
+      }
+      .cx-lead {
+        color: var(--cx-ink-2);
+        font-style: italic;
+        margin: 0 0 1rem;
+        font-variation-settings: "opsz" 30;
+      }
+
+      /* two columns, as an opening should be */
+      .cx-cols {
+        columns: 2;
+        column-gap: clamp(28px, 5vw, 52px);
+        column-rule: 1px solid var(--cx-rule-soft);
+        margin-top: 0.4rem;
+      }
+      .cx-cols p { margin: 0 0 0.95rem; break-inside: avoid; }
+      .cx-entry-t {
+        font-family: var(--cx-fell);
+        font-size: 0.86em;
+        letter-spacing: 0.03em;
+        color: var(--cx-rubric);
+      }
+
+      /* the versal */
+      .cx-drop::first-letter {
+        font-family: var(--cx-fell);
+        float: left;
+        font-size: 3.1em;
+        line-height: 0.82;
+        padding: 0.06em 0.1em 0 0;
+        color: var(--cx-rubric);
+      }
+
+      .cx-catch {
+        margin: 1.6rem 0 0;
+        text-align: right;
+        font-style: italic;
+        font-size: 0.86rem;
+        color: var(--cx-ink-4);
+      }
+
+      .cx-chap--two {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        gap: clamp(30px, 5vw, 62px);
+      }
+
+      .cx-numbered { margin: 0; padding-left: 1.15rem; }
+      .cx-numbered li { margin: 0 0 0.8rem; color: var(--cx-ink-2); }
+      .cx-numbered li::marker { color: var(--cx-rubric); font-family: var(--cx-fell); }
+      .cx-numbered b { color: var(--cx-ink); font-weight: 600; }
+
+      /* ── the drolleries, in the margin where they belong ── */
+      .cx-shelves { list-style: none; margin: 0; padding: 0; }
+      .cx-shelves li {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 13px 0;
+        border-top: 1px solid var(--cx-rule-soft);
+      }
+      .cx-shelves li:first-child { border-top: 0; padding-top: 4px; }
+      .cx-shelves p { margin: 0; color: var(--cx-ink-2); font-size: 0.97rem; }
+      .cx-shelves .dr { --dr-size: 50px; margin-top: -4px; }
+      .cx-shelves li:hover .dr { color: var(--cx-rubric); }
+      .cx-shelves .dr { transition: color 220ms ease; }
+
+      .cx-caveats { margin: 0; }
+      .cx-caveats > div { padding: 11px 0; border-top: 1px solid var(--cx-rule-soft); }
+      .cx-caveats > div:first-child { border-top: 0; padding-top: 0; }
+      .cx-caveats dt {
+        font-family: var(--cx-fell);
+        font-size: 0.86rem;
+        letter-spacing: 0.03em;
+        color: var(--cx-ink);
+        margin-bottom: 0.15rem;
+      }
+      .cx-caveats dd { margin: 0; color: var(--cx-ink-3); font-size: 0.94rem; }
+
+      /* ══════════ recipe ══════════ */
+      .cx-recipe {
+        list-style: none;
+        counter-reset: motion;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        gap: clamp(24px, 4vw, 42px);
+        margin: 1.4rem 0 0;
         padding: 0;
       }
-      .lp-steps li { counter-increment: step; }
-      .lp-steps h3 {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 1rem;
-        margin: 0 0 0.8em;
+      .cx-recipe li { counter-increment: motion; }
+      .cx-recipe h3 {
+        font-family: var(--cx-fell);
+        font-size: 0.95rem;
+        font-weight: 400;
+        letter-spacing: 0.05em;
+        margin: 0 0 0.6rem;
       }
-      .lp-steps h3::before {
-        content: counter(step);
-        display: grid;
-        place-items: center;
-        width: 22px;
-        height: 22px;
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-        color: var(--accent);
-        background: var(--accent-ghost);
-        border: 1px solid var(--accent-subtle);
-        border-radius: 50%;
+      .cx-recipe h3::before {
+        content: counter(motion, upper-roman) ". ";
+        color: var(--cx-rubric);
       }
-      .lp-steps pre {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 13px 15px;
+      .cx-recipe pre {
+        margin: 0 0 0.7rem;
+        padding: 11px 13px;
+        border: 1px solid var(--cx-rule);
+        background: var(--cx-paper-2);
         overflow-x: auto;
-        font-size: 0.8rem;
-        line-height: 1.55;
-        margin: 0 0 0.9em;
-      }
-      .lp-steps p { color: var(--text-3); font-size: 0.9rem; line-height: 1.6; margin: 0; }
-
-      .lp-hosts {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 16px;
-        margin-bottom: 26px;
-      }
-      .lp-host {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 18px 18px 20px;
-        background: var(--surface);
-      }
-      .lp-host.is-best { border-color: var(--accent-subtle); background: var(--accent-ghost); }
-      .lp-host h3 {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.98rem;
-        margin: 0 0 0.7em;
-      }
-      .lp-pill {
-        font-family: var(--font-mono);
-        font-size: 0.62rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--accent);
-        border: 1px solid var(--accent-subtle);
-        border-radius: 999px;
-        padding: 2px 7px;
-      }
-      .lp-host code {
-        display: block;
         font-size: 0.78rem;
-        color: var(--text-2);
-        background: var(--surface-2);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 6px 9px;
-        margin-bottom: 10px;
-        overflow-x: auto;
+        line-height: 1.55;
       }
-      .lp-host p { font-size: 0.82rem; color: var(--text-3); margin: 0; line-height: 1.55; }
+      .cx-recipe p { margin: 0; font-size: 0.92rem; color: var(--cx-ink-3); }
 
-      .lp-why .lp-list strong { color: var(--text); }
+      /* ══════════ table ══════════ */
+      .cx-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.4rem 0 1rem;
+        font-size: 0.9rem;
+      }
+      .cx-table thead th {
+        font-family: var(--cx-fell);
+        font-size: 0.66rem;
+        font-weight: 400;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--cx-ink-4);
+        text-align: left;
+        padding: 0 12px 7px 0;
+        border-bottom: 3px double var(--cx-rule);
+      }
+      .cx-table tbody th {
+        font-family: var(--cx-fell);
+        font-weight: 400;
+        font-size: 0.95rem;
+        text-align: left;
+        white-space: nowrap;
+      }
+      .cx-table td, .cx-table tbody th {
+        padding: 10px 12px 10px 0;
+        border-bottom: 1px solid var(--cx-rule-soft);
+        color: var(--cx-ink-2);
+        vertical-align: baseline;
+      }
+      .cx-table tr.is-best th { color: var(--cx-rubric); }
+      .cx-mark {
+        display: inline-block;
+        margin-left: 8px;
+        font-family: var(--cx-fell);
+        font-size: 0.58rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--cx-rubric);
+        border: 1px solid currentColor;
+        border-radius: 2px;
+        padding: 1px 5px;
+        vertical-align: 2px;
+      }
+      .cx-no { color: var(--cx-rubric); font-style: italic; }
+      .cx-foot-note {
+        font-size: 0.9rem;
+        color: var(--cx-ink-3);
+        max-width: var(--cx-measure);
+        margin: 0;
+      }
 
-      /* ---------- footer ---------- */
-      .lp-footer {
+      .cx-chap--apology .cx-numbered { max-width: 44rem; }
+
+      /* ══════════ colophon ══════════ */
+      .cx-colophon {
+        max-width: var(--cx-page);
+        margin: 0 auto;
+        padding: clamp(30px, 5vh, 52px) clamp(20px, 5vw, 34px) clamp(46px, 8vh, 78px);
+        text-align: center;
+      }
+      .cx-orn {
+        font-size: 1.2rem;
+        color: var(--cx-rubric);
+        margin: 0.8rem 0 1rem;
+      }
+      .cx-thanks {
+        max-width: 36rem;
+        margin: 0 auto 2rem;
+        padding: 16px 20px;
+        border: 1px solid var(--cx-rule);
+        border-left: 3px double var(--cx-rubric);
+        background: var(--cx-paper-2);
+        font-size: 0.95rem;
+        line-height: 1.62;
+        color: var(--cx-ink-2);
+        text-align: left;
+        font-variation-settings: "opsz" 14;
+      }
+      .cx-thanks-t {
+        font-family: var(--cx-fell);
+        letter-spacing: 0.06em;
+        color: var(--cx-rubric);
+      }
+
+      .cx-colo-body {
+        max-width: 34rem;
+        margin: 0 auto;
+        font-size: 0.92rem;
+        line-height: 1.66;
+        color: var(--cx-ink-3);
+        /* Small text takes the sturdier low-optical-size cut. */
+        font-variation-settings: "opsz" 9;
+      }
+      .cx-colo-title {
+        font-family: var(--cx-fell);
+        letter-spacing: 0.06em;
+        color: var(--cx-ink-2);
+      }
+      .cx-colo-body b { color: var(--cx-ink-2); font-weight: 600; }
+      .cx-colo-links {
         display: flex;
         flex-wrap: wrap;
-        gap: 24px;
-        justify-content: space-between;
-        align-items: flex-end;
-        max-width: var(--lp-max);
-        margin: 0 auto;
-        padding: 40px clamp(20px, 5vw, 40px) 64px;
-        border-top: 1px solid var(--border);
+        justify-content: center;
+        gap: 20px;
+        margin-top: 1.6rem;
+        font-family: var(--cx-fell);
+        font-size: 0.7rem;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
       }
-      .lp-footer p { color: var(--text-4); font-size: 0.85rem; margin: 8px 0 0; }
-      .lp-footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
-      .lp-footer-links a {
-        font-size: 0.88rem;
-        color: var(--text-3);
-        text-decoration: none;
-      }
-      .lp-footer-links a:hover { color: var(--accent); }
+      .cx-colo-links a { color: var(--cx-ink-3); }
+      .cx-colo-links a:hover { color: var(--cx-rubric); }
 
-      @media (max-width: 860px) {
-        .lp-hero { grid-template-columns: minmax(0, 1fr); }
-        .lp-hero-vis { order: -1; max-width: 380px; }
+      /* ══════════ narrow leaves ══════════ */
+      @media (max-width: 900px) {
+        .cx-title { grid-template-columns: minmax(0, 1fr); }
+        .cx-plate { order: -1; max-width: 24rem; margin: 0 auto; }
+        .cx-cols { columns: 1; }
+        .cx-head { grid-template-columns: 1fr auto; }
+        .cx-head-c { display: none; }
+      }
+      @media (max-width: 520px) {
+        .cx { font-size: 18px; }
+        .cx-head-r { gap: 6px; }
       }
     </style>
   </body>

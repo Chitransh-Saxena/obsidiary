@@ -1,9 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "obsidiary",
+  "account_id": "a82a6302a28c6c2e55c2259f35d17683",
   "compatibility_date": "2026-01-01",
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page"
-  }
+  },
+  // Served only from the custom domain; the workers.dev route is off.
+  "workers_dev": false,
+  "routes": [{ "pattern": "obsidiary.pulsar-projects.org", "custom_domain": true }],
+  "observability": { "enabled": true }
 }

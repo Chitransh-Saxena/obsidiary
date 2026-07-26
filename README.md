@@ -4,10 +4,10 @@ Publish an Obsidian vault as a fast, linked, free website — with your notes
 living in their own repository, and upgrades that are `npm update` rather than a
 merge conflict.
 
-**[Site & docs](https://obsidiary.chitransh-aang.workers.dev)** ·
-**[Live demo](https://obsidiary.chitransh-aang.workers.dev/live)** — render any
+**[Site & docs](https://obsidiary.pulsar-projects.org)** ·
+**[Live demo](https://obsidiary.pulsar-projects.org/live)** — render any
 public vault in your browser ·
-**[A vault it publishes](https://chitransh-notes.chitransh-aang.workers.dev)**
+**[A vault it publishes](https://notes.pulsar-projects.org)**
 
 > **Status: working, not yet on npm.** Everything below runs. The packages have
 > not been published to the registry yet, so `npm create obsidiary@latest` will
@@ -81,7 +81,7 @@ And the app around them:
 - `/search-index.json` and `/graph` injected automatically; the search index is
   fetched on first search, so readers who never search never download it
 
-182 tests cover the parts that are easy to get subtly wrong.
+199 tests cover the parts that are easy to get subtly wrong.
 
 ### A canvas is a note
 
@@ -99,7 +99,7 @@ testable.
 
 ## Deploy it free
 
-Full walkthrough: **[the setup guide](https://obsidiary.chitransh-aang.workers.dev/docs/setup)**.
+Full walkthrough: **[the setup guide](https://obsidiary.pulsar-projects.org/docs/setup)**.
 
 ```bash
 npm create obsidiary@latest my-notes

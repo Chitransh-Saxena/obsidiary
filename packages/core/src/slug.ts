@@ -12,9 +12,20 @@ import type { NoteFrontmatter } from './types.js';
 /** Characters that are legal in a URL path but hostile in practice. */
 const UNSAFE = /[<>:"\\|?*#\[\]()'`!$&+,;=@%^{}~]/g;
 
+/** Hyphen, non-breaking hyphen, figure/en/em dash, horizontal bar, minus. */
+const DASHES = /[\u2010-\u2015\u2212]/g;
+
+/** Curly quotes, primes, ellipsis, bullet, middot — decorative, never in a URL. */
+const DECORATIVE = /[\u2018\u2019\u201A\u201B\u201C\u201D\u201E\u201F\u2032\u2033\u2026\u00B7\u2022]/g;
+
 export function slugifySegment(segment: string): string {
   return segment
     .normalize('NFC')
+    // `FPV — The first build` must not become `fpv-—-the-first-build`. An em
+    // dash is legal in a path but percent-encodes into noise, and titles use
+    // them constantly.
+    .replace(DASHES, '-')
+    .replace(DECORATIVE, '')
     .replace(UNSAFE, '')
     .replace(/\s+/g, '-')
     .replace(/\.+/g, '.')

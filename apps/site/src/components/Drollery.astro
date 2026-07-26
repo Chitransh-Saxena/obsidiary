@@ -1,0 +1,170 @@
+---
+/**
+ * Marginal drolleries.
+ *
+ * Illuminated manuscripts put small absurd figures in the margins — musicians,
+ * jugglers, animals doing human things. These are that, drawn in line and given
+ * the gentlest possible loop. Inline SVG rather than GIFs: crisp at any size,
+ * they inherit the page's ink and rubric colours, and there is nothing to host.
+ */
+interface Props {
+  name: 'lutenist' | 'juggler' | 'aviator' | 'limner' | 'reader';
+  label?: string;
+}
+const { name, label } = Astro.props;
+---
+
+<span class={`dr dr--${name}`} role="img" aria-label={label ?? name}>
+  {
+    name === 'lutenist' && (
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        {/* the player, kept to the left so the instrument has room */}
+        <circle cx="12.5" cy="11" r="4.3" />
+        <path d="M12.5 15.3v8.4" />
+        <path d="M12.5 23.7l-3.4 8.6M12.5 23.7l3.6 5.2" />
+        {/* a figure-of-eight body reads as a guitar even at this size */}
+        <circle cx="28.5" cy="30.5" r="7" />
+        <circle cx="26.6" cy="20.8" r="4.1" />
+        {/* a filled rose, not a ring — the camera below owns the ring */}
+        <circle class="dr-hole" cx="28.5" cy="30.5" r="1.9" fill="currentColor" stroke="none" />
+        {/* neck away from the head, so nothing collides */}
+        <path class="dr-neck" d="M28.8 17.6L37.4 9.4" />
+        <path class="dr-neck" d="M36.2 8.2l2.4 2.5" />
+        {/* the strumming arm */}
+        <path class="dr-arm" d="M12.8 17.4L25.6 27.6" />
+      </svg>
+    )
+  }
+
+  {
+    name === 'juggler' && (
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="13.5" cy="12.5" r="4.2" />
+        <path d="M13.5 16.7v9" />
+        {/* one arm out for balance, one up */}
+        <path d="M13.5 19.4l-5.5 4.6M13.5 19.4l5 -3.4" />
+        {/* planted leg */}
+        <path d="M13.5 25.7l-2.4 9.8" />
+        {/* the bent leg keeping it up: thigh forward, shin raised */}
+        <g class="dr-leg">
+          <path d="M13.5 25.7l6.8 2.2" />
+          <path d="M20.3 27.9l3.4 -6.4" />
+        </g>
+        {/* A solid disc, not a ring: a pentagon cannot resolve at this size, and
+            a ring-and-dot would only read as the camera two rows down. The pose
+            is what says football. */}
+        <circle class="dr-ball" cx="26.6" cy="14.4" r="4.7" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  {
+    name === 'aviator' && (
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <g class="dr-hover">
+          <rect x="18" y="20" width="12" height="8" rx="2.4" />
+          <circle cx="24" cy="24" r="1.6" />
+          <path d="M18.6 20.6L12 15M29.4 20.6L36 15M18.6 27.4L12 33M29.4 27.4L36 33" />
+          <g class="dr-rotor" style="transform-origin:12px 15px"><path d="M7.4 15h9.2" /></g>
+          <g class="dr-rotor dr-rotor--b" style="transform-origin:36px 15px"><path d="M31.4 15h9.2" /></g>
+          <g class="dr-rotor dr-rotor--b" style="transform-origin:12px 33px"><path d="M7.4 33h9.2" /></g>
+          <g class="dr-rotor" style="transform-origin:36px 33px"><path d="M31.4 33h9.2" /></g>
+        </g>
+      </svg>
+    )
+  }
+
+  {
+    name === 'limner' && (
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 18.5h5l2.6-3.4h13.8L33 18.5h6a2 2 0 012 2v13a2 2 0 01-2 2H9a2 2 0 01-2-2v-13a2 2 0 012-2z" />
+        <circle cx="24" cy="27" r="6.2" />
+        <circle class="dr-iris" cx="24" cy="27" r="2.4" />
+        <circle class="dr-flash" cx="12.4" cy="22.4" r="1.2" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  }
+
+  {
+    name === 'reader' && (
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 33V15.6c5.4-2.4 12-2.4 18 .8v17.4c-6-3-12.6-3-18-.8z" />
+        <path class="dr-leaf" d="M24 16.4c6-3.2 12.6-3.2 18-.8V33c-5.4-2.2-12-2.2-18 .8z" />
+        <path d="M24 16.4v17.4" />
+      </svg>
+    )
+  }
+</span>
+
+<style>
+  .dr {
+    display: inline-block;
+    width: var(--dr-size, 46px);
+    height: var(--dr-size, 46px);
+    color: var(--cx-ink-3);
+    flex: none;
+  }
+  .dr svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+  /* the instrument's face and the ball take the rubric, as an illuminator would */
+  .dr-ball-o, .dr-iris { stroke: var(--cx-rubric); }
+  .dr-hole { color: var(--cx-rubric); }
+  .dr-flash { fill: var(--cx-rubric); }
+
+  /* ── the strumming hand ── */
+  .dr-arm {
+    transform-origin: 18px 24.8px;
+    animation: dr-strum 1.5s ease-in-out infinite;
+  }
+  @keyframes dr-strum {
+    0%, 100% { transform: rotate(-11deg); }
+    50% { transform: rotate(9deg); }
+  }
+
+  /* ── keepie-uppies ── */
+  .dr-ball { color: var(--cx-rubric); animation: dr-up 1.3s cubic-bezier(0.36, 0, 0.5, 1) infinite; }
+  @keyframes dr-up {
+    0%, 100% { transform: translateY(3.5px); }
+    45% { transform: translateY(-5.5px); }
+  }
+  .dr-leg { animation: dr-tap 1.3s ease-in-out infinite; transform-origin: 13.5px 25.7px; }
+  @keyframes dr-tap {
+    0%, 100% { transform: rotate(5deg); }
+    45% { transform: rotate(-9deg); }
+  }
+
+  /* ── rotors ── */
+  .dr-hover { animation: dr-bob 2.6s ease-in-out infinite; }
+  @keyframes dr-bob {
+    0%, 100% { transform: translateY(-1.2px); }
+    50% { transform: translateY(1.6px); }
+  }
+  .dr-rotor { animation: dr-spin 0.5s linear infinite; }
+  .dr-rotor--b { animation-direction: reverse; }
+  @keyframes dr-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── shutter ── */
+  .dr-iris { animation: dr-iris 3.4s ease-in-out infinite; transform-origin: 24px 27px; }
+  @keyframes dr-iris {
+    0%, 88%, 100% { transform: scale(1); }
+    93% { transform: scale(0.55); }
+  }
+  .dr-flash { animation: dr-blink 3.4s ease-in-out infinite; }
+  @keyframes dr-blink {
+    0%, 90%, 100% { opacity: 0.25; }
+    94% { opacity: 1; }
+  }
+
+  /* ── a leaf turning ── */
+  .dr-leaf { transform-origin: 24px 25px; animation: dr-turn 5s ease-in-out infinite; }
+  @keyframes dr-turn {
+    0%, 62%, 100% { transform: scaleX(1); }
+    76% { transform: scaleX(0.12); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dr * { animation: none !important; }
+  }
+</style>

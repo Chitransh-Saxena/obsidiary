@@ -1,8 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "obsidiary-adoption",
+  "account_id": "a82a6302a28c6c2e55c2259f35d17683",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-01",
+  // A single-level subdomain on purpose: the free Universal SSL certificate
+  // covers *.pulsar-projects.org but not a second level, so
+  // `api.obsidiary.pulsar-projects.org` would fail its TLS handshake.
+  "workers_dev": false,
+  "routes": [{ "pattern": "obsidiary-api.pulsar-projects.org", "custom_domain": true }],
   "observability": { "enabled": true },
   "vars": {
     "GITHUB_REPO": "Chitransh-Saxena/obsidiary",
