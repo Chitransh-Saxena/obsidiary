@@ -83,10 +83,18 @@ import { site } from 'virtual:obsidiary';
         Paste a public GitHub repository containing Obsidian markdown. Nothing is
         built and nothing is uploaded — the whole engine runs in this tab.
       </p>
-      <div class="ob-live-examples">
-        <span>Try:</span>
-        <button type="button" data-example="obsidiary/obsidiary/apps/demo/vault">the demo vault</button>
-      </div>
+      {
+        site.liveExamples.length > 0 && (
+          <div class="ob-live-examples">
+            <span>Try:</span>
+            {site.liveExamples.map((example) => (
+              <button type="button" data-example={example.repo}>
+                {example.label}
+              </button>
+            ))}
+          </div>
+        )
+      }
       <p class="ob-live-note-small">
         Large vaults take a moment: GitHub is asked once for the file list, then
         each note is fetched from its CDN.
@@ -304,8 +312,17 @@ import { site } from 'virtual:obsidiary';
           status.hidden = true;
           layout.hidden = false;
 
+          // Open on the vault's home note. Falling back to whatever sorts first
+          // lands on a canvas or a stray `boards/` file, which reads as broken.
+          const home =
+            ordered.find((n) => n.slug === '') ??
+            ordered.find((n) => n.basename.toLowerCase() === 'index') ??
+            ordered.find((n) => n.basename.toLowerCase() === 'readme') ??
+            ordered.find((n) => n.kind !== 'canvas') ??
+            ordered[0];
+
           const wanted = decodeURIComponent(location.hash.slice(1));
-          show(index.notes[wanted] ? wanted : (ordered[0]?.path ?? ''));
+          show(index.notes[wanted] ? wanted : (home?.path ?? ''));
 
           const url = new URL(location.href);
           url.searchParams.set('repo', spec);

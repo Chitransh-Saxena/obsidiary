@@ -13,6 +13,12 @@ export default defineConfig({
       title: 'Obsidiary',
       description: 'Publish an Obsidian vault as a fast, linked, free website.',
       live: true,
+      liveExamples: [
+        { label: 'the demo vault', repo: 'Chitransh-Saxena/obsidiary/apps/demo/vault' },
+        { label: "Chitransh's notes", repo: 'Chitransh-Saxena/notes' },
+        // Someone else's vault entirely — the point of the live view.
+        { label: "Quartz's own docs", repo: 'jackyzha0/quartz/docs' },
+      ],
     }),
   ],
 });

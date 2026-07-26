@@ -405,6 +405,50 @@ body { overflow-x: hidden; }
   max-width: 60ch;
 }
 
+/* ---------- tag pages ---------- */
+.ob-tagpage {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 48px) clamp(20px, 5vw, 40px) 20vh;
+}
+.ob-tagpage h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  margin: 0 0 0.2em;
+}
+.ob-tag-count { color: var(--text-3); margin: 0 0 1.6em; font-size: 0.92rem; }
+.ob-tag-children { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 1.8em; }
+
+.ob-tag-list { list-style: none; margin: 0; padding: 0; }
+.ob-tag-list li { padding: 14px 0; border-top: 1px solid var(--border); }
+.ob-tag-list li:first-child { border-top: 0; }
+.ob-tag-list a { font-size: 1.02rem; font-weight: 500; color: var(--accent); text-decoration: none; }
+.ob-tag-list p { margin: 4px 0 0; color: var(--text-3); font-size: 0.9rem; line-height: 1.55; }
+.ob-tag-all { margin-top: 2.4em; font-size: 0.9rem; }
+.ob-tag-all a { color: var(--accent); text-decoration: none; }
+
+.ob-tag-index { list-style: none; margin: 0; padding: 0; }
+.ob-tag-index li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 11px 0;
+  border-top: 1px solid var(--border);
+}
+.ob-tag-index li:first-child { border-top: 0; }
+.ob-tag-n { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-4); }
+.ob-tag-kids { display: flex; flex-wrap: wrap; gap: 10px; }
+.ob-tag-kids a {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--text-3);
+  text-decoration: none;
+}
+.ob-tag-kids a:hover { color: var(--accent); }
+
 /* ---------- canvas ---------- */
 .ob-canvas {
   display: flex;

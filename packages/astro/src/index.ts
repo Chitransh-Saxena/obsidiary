@@ -37,13 +37,28 @@ export interface ObsidiaryOptions extends VaultOptions {
    * Off by default: it is a demo surface, not something most sites want.
    */
   live?: boolean;
+  /**
+   * Vaults offered as one-click examples on `/live`. Left empty the page just
+   * shows its input — a hardcoded example that points at a repository the user
+   * doesn't own is worse than none.
+   */
+  liveExamples?: Array<{ label: string; repo: string }>;
 }
 
 const VIRTUAL_ID = 'virtual:obsidiary';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 
 export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
-  const { vault, repo, token, title, description, live = false, ...vaultOptions } = options;
+  const {
+    vault,
+    repo,
+    token,
+    title,
+    description,
+    live = false,
+    liveExamples = [],
+    ...vaultOptions
+  } = options;
 
   if (!vault && !repo) {
     throw new Error('[obsidiary] Set either `vault` (a local folder) or `repo` (a GitHub repository).');
@@ -54,7 +69,11 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
   let vaultRoot = '';
   let publicDir = '';
 
-  const site = { title: title ?? 'Notes', description: description ?? '' };
+  const site = {
+    title: title ?? 'Notes',
+    description: description ?? '',
+    liveExamples,
+  };
 
   return {
     name: '@obsidiary/astro',
@@ -101,6 +120,10 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
         injectRoute({ pattern: '/search-index.json', entrypoint: '@obsidiary/astro/routes/search-index.ts' });
         injectRoute({ pattern: '/vault-index.json', entrypoint: '@obsidiary/astro/routes/vault-index.ts' });
         injectRoute({ pattern: '/graph', entrypoint: '@obsidiary/astro/routes/graph.astro' });
+        // The renderer links every `#tag` at /tags/<tag>; without these routes
+        // every tagged note ships dead links.
+        injectRoute({ pattern: '/tags', entrypoint: '@obsidiary/astro/routes/tags.astro' });
+        injectRoute({ pattern: '/tags/[...tag]', entrypoint: '@obsidiary/astro/routes/tag.astro' });
         if (live) {
           injectRoute({ pattern: '/live', entrypoint: '@obsidiary/astro/routes/live.astro' });
         }

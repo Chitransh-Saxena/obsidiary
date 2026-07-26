@@ -1,0 +1,68 @@
+---
+/**
+ * `/tags` — the whole tag index, so the tag links go somewhere sensible when a
+ * reader climbs up from a nested one.
+ */
+import type { Note } from 'obsidiary';
+import { index } from 'virtual:obsidiary';
+import AppShell from '../components/AppShell.astro';
+
+export const prerender = true;
+
+const tags = Object.keys(index.tags).sort();
+// Top-level tags first, each with its descendants beneath.
+const roots = tags.filter((t) => !t.includes('/'));
+const loose = tags.filter((t) => t.includes('/') && !roots.includes(t.split('/')[0] ?? ''));
+
+const note: Note = {
+  kind: 'markdown',
+  path: '',
+  slug: 'tags',
+  url: '/tags',
+  basename: 'Tags',
+  folder: '',
+  title: 'Tags',
+  body: '',
+  frontmatter: {},
+  aliases: [],
+  tags: [],
+  headings: [],
+  blocks: [],
+  links: [],
+};
+---
+
+<AppShell note={note} html="">
+  <div class="ob-tagpage">
+    <p class="ob-panel-label">Index</p>
+    <h1>Tags</h1>
+    <p class="ob-tag-count">{tags.length} in this vault</p>
+
+    {
+      tags.length === 0 ? (
+        <p class="ob-empty">No tags yet.</p>
+      ) : (
+        <ul class="ob-tag-index">
+          {[...roots, ...loose].map((root) => {
+            const kids = tags.filter((t) => t.startsWith(`${root}/`));
+            return (
+              <li>
+                <a class="tag" href={`/tags/${root}`}>
+                  #{root}
+                </a>
+                <span class="ob-tag-n">{(index.tags[root] ?? []).length}</span>
+                {kids.length > 0 && (
+                  <span class="ob-tag-kids">
+                    {kids.map((k) => (
+                      <a href={`/tags/${k}`}>{k.slice(root.length + 1)}</a>
+                    ))}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+  </div>
+</AppShell>

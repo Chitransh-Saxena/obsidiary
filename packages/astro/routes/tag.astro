@@ -1,0 +1,83 @@
+---
+/**
+ * `/tags/<tag>` — every note carrying a tag.
+ *
+ * The renderer turns `#tag` into a link here, so without this route every
+ * tagged note on every site ships dead links. Nested tags resolve at each
+ * level: `#a/b/c` lists under `a`, `a/b` and `a/b/c`.
+ */
+import { summarize, type Note } from 'obsidiary';
+import { index } from 'virtual:obsidiary';
+import AppShell from '../components/AppShell.astro';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return Object.keys(index.tags).map((tag) => ({ params: { tag }, props: { tag } }));
+}
+
+const { tag } = Astro.props;
+const paths: string[] = index.tags[tag] ?? [];
+const notes = paths.map((p) => index.notes[p]).filter((n): n is Note => Boolean(n));
+
+// Tags nested directly beneath this one, e.g. `fpv/sim` when viewing `fpv`.
+const children = Object.keys(index.tags)
+  .filter((t) => t.startsWith(`${tag}/`) && !t.slice(tag.length + 1).includes('/'))
+  .sort();
+
+const parent = tag.includes('/') ? tag.slice(0, tag.lastIndexOf('/')) : null;
+
+const note: Note = {
+  kind: 'markdown',
+  path: '',
+  slug: `tags/${tag}`,
+  url: `/tags/${tag}`,
+  basename: tag,
+  folder: '',
+  title: `#${tag}`,
+  body: '',
+  frontmatter: {},
+  aliases: [],
+  tags: [],
+  headings: [],
+  blocks: [],
+  links: [],
+};
+---
+
+<AppShell note={note} html="">
+  <div class="ob-tagpage">
+    <p class="ob-panel-label">
+      Tag{parent && <> · <a href={`/tags/${parent}`}>#{parent}</a></>}
+    </p>
+    <h1>#{tag}</h1>
+    <p class="ob-tag-count">
+      {notes.length} {notes.length === 1 ? 'note' : 'notes'}
+    </p>
+
+    {
+      children.length > 0 && (
+        <p class="ob-tag-children">
+          {children.map((child) => (
+            <a class="tag" href={`/tags/${child}`}>
+              #{child}
+            </a>
+          ))}
+        </p>
+      )
+    }
+
+    <ul class="ob-tag-list">
+      {
+        notes.map((n) => (
+          <li>
+            <a href={n.url}>{n.title}</a>
+            <p>{summarize(n.body, 180)}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="ob-tag-all"><a href="/tags">All tags →</a></p>
+  </div>
+</AppShell>

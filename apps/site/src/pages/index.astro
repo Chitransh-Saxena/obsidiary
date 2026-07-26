@@ -115,6 +115,8 @@ const hosts = [
         <span class="cx-sep">·</span>
         <a href="/live">Live</a>
         <span class="cx-sep">·</span>
+        <a href="https://notes.pulsar-projects.org">A vault</a>
+        <span class="cx-sep">·</span>
         <a href={REPO}>Source</a>
         <button id="cx-theme" type="button" aria-label="Toggle theme">☾</button>
       </nav>
@@ -150,10 +152,20 @@ const hosts = [
             <button id="cx-copy" type="button" aria-label="Copy command">copy</button>
           </div>
           <div class="cx-card-foot">
-            <a class="cx-go" href="/live">Read any vault, unbound &rarr;</a>
+            <a class="cx-go" href="/live">
+              <span>Read any vault, unbound</span>
+              <i class="cx-go-arrow" aria-hidden="true">&rarr;</i>
+            </a>
             <a class="cx-quiet" href="/docs">The setter's guide</a>
           </div>
         </div>
+
+        <p class="cx-seen">
+          <span class="cx-seen-t">Seen in the wild —</span>
+          <a href="https://notes.pulsar-projects.org">my own notes</a> run on this,
+          set from <a href="https://github.com/Chitransh-Saxena/notes">a repository holding
+          nothing but markdown</a>.
+        </p>
       </div>
 
       <!-- engraved plate -->
@@ -735,34 +747,56 @@ const hosts = [
         font-size: 0.86rem;
       }
 
-      /* The chief action, inked like a stamp pressed onto the card.
+      /* The chief action, given the same double-ruled frame as the plate above
+         so it reads as part of the page rather than a button dropped onto it.
          Selector needs `.cx a.cx-go`: the base `.cx a` rule is (0,1,1) and would
          otherwise win over a bare `.cx-go` (0,1,0), painting rubric on rubric. */
       .cx a.cx-go {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
+        gap: 12px;
+        margin: 4px;                    /* room for the offset rule */
         font-family: var(--cx-fell);
-        font-size: 0.72rem;
-        letter-spacing: 0.11em;
+        font-size: 0.78rem;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
         color: var(--cx-paper);
         background: var(--cx-rubric);
-        border: 1px solid var(--cx-rubric);
-        border-radius: 2px;
-        padding: 9px 15px;
-        box-shadow: 2px 2px 0 color-mix(in srgb, var(--cx-rubric) 28%, transparent);
-        transition: transform 140ms ease, box-shadow 140ms ease;
+        border: 0;
+        border-radius: 1px;
+        outline: 1px solid var(--cx-rubric);
+        outline-offset: 3px;
+        padding: 12px 20px;
+        transition: background 170ms ease, outline-offset 170ms ease, transform 170ms ease;
       }
       .cx a.cx-go:hover {
         color: var(--cx-paper);
         text-decoration: none;
-        transform: translate(-1px, -1px);
-        box-shadow: 3px 3px 0 color-mix(in srgb, var(--cx-rubric) 40%, transparent);
+        background: color-mix(in srgb, var(--cx-rubric) 86%, #000);
+        outline-offset: 5px;
+        transform: translateY(-1px);
       }
-      .cx a.cx-go:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 transparent; }
+      .cx a.cx-go:active { transform: translateY(1px); outline-offset: 2px; }
+      .cx-go-arrow { font-style: normal; transition: transform 170ms ease; }
+      .cx a.cx-go:hover .cx-go-arrow { transform: translateX(4px); }
+
       .cx-quiet { font-style: italic; color: var(--cx-ink-3); }
       .cx-quiet:hover { color: var(--cx-rubric); }
+
+      .cx-seen {
+        margin: 1.1rem 0 0;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        color: var(--cx-ink-3);
+        font-variation-settings: "opsz" 14;
+      }
+      .cx-seen-t {
+        font-family: var(--cx-fell);
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--cx-ink-4);
+      }
 
       @media (prefers-reduced-motion: reduce) {
         .cx a.cx-go, .cx a.cx-go:hover, .cx a.cx-go:active { transition: none; transform: none; }
