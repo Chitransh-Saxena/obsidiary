@@ -22,6 +22,10 @@ interface Props {
 }
 
 const { note, html, renderer } = Astro.props;
+
+/** Vault paths may contain spaces; GitHub wants them encoded, slashes intact. */
+const encodePath = (path: string): string =>
+  path.split('/').map(encodeURIComponent).join('/');
 const description = note.frontmatter.description;
 const summary = typeof description === 'string' ? description : site.description;
 ---
@@ -40,7 +44,7 @@ const summary = typeof description === 'string' ? description : site.description
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IM+Fell+English+SC&family=JetBrains+Mono:wght@400;500&display=swap"
     />
     <script is:inline>
       // Runs before first paint: a dark-mode reader must never see a white flash.
@@ -78,6 +82,35 @@ const summary = typeof description === 'string' ? description : site.description
         {note.kind !== 'canvas' && html !== '' && (
           <div class="obsidiary-note">
             <article set:html={html} />
+            {
+              (note.mtime || site.source) && (
+                <footer class="ob-colophon">
+                  {note.mtime && (
+                    <span>
+                      Last set{' '}
+                      <time datetime={new Date(note.mtime).toISOString()}>
+                        {new Date(note.mtime).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </time>
+                    </span>
+                  )}
+                  {site.source && (
+                    <span class="ob-colophon-links">
+                      <a href={`${site.source.blobBase}${encodePath(note.path)}`}>
+                        View source
+                      </a>
+                      <a href={`${site.source.editBase}${encodePath(note.path)}`}>
+                        Suggest an edit
+                      </a>
+                      <a href={site.source.homeUrl}>{site.source.repo}</a>
+                    </span>
+                  )}
+                </footer>
+              )
+            }
           </div>
         )}
         <slot />

@@ -15,10 +15,29 @@ const { nodes, currentPath, open } = Astro.props;
     nodes.map((node) =>
       node.type === 'folder' ? (
         <li class="ob-folder" data-path={node.path} data-open={open.includes(node.path) ? 'true' : 'false'}>
-          <button class="ob-folder-toggle" type="button" aria-expanded={open.includes(node.path)}>
-            <span class="ob-caret" aria-hidden="true">▶</span>
-            <span class="ob-name">{node.name}</span>
-          </button>
+          {/* A folder holding an index note is itself a destination, so the name
+              becomes a link and only the caret toggles. Without this the landing
+              note is folded away and unreachable from the sidebar. */}
+          <div class="ob-folder-row">
+            <button
+              class="ob-folder-toggle"
+              type="button"
+              aria-expanded={open.includes(node.path)}
+              aria-label={`Toggle ${node.name}`}
+            >
+              <span class="ob-caret" aria-hidden="true">▶</span>
+              {!node.indexUrl && <span class="ob-name">{node.name}</span>}
+            </button>
+            {node.indexUrl && (
+              <a
+                class="ob-folder-link"
+                href={node.indexUrl}
+                aria-current={node.indexPath === currentPath ? 'page' : undefined}
+              >
+                <span class="ob-name">{node.name}</span>
+              </a>
+            )}
+          </div>
           <Astro.self nodes={node.children} currentPath={currentPath} open={open} />
         </li>
       ) : (

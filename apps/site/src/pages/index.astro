@@ -104,8 +104,6 @@ const hosts = [
   </head>
 
   <body class="cx">
-    <div class="cx-grain" aria-hidden="true"></div>
-
     <!-- ─────────── running head ─────────── -->
     <header class="cx-head">
       <span class="cx-head-l">Obsidiary</span>
@@ -519,38 +517,26 @@ const hosts = [
       [hidden] { display: none !important; }
 
       /* ══════════ the leaf ══════════ */
+      /* The codex palette is the product's core theme now, defined once in
+         obsidiary.css. These are aliases onto it, so the title page and the
+         reading app can never drift apart. */
       :root {
-        --cx-paper: #f5f0e4;
-        --cx-paper-2: #ece5d4;
-        --cx-ink: #221f1a;
-        --cx-ink-2: #443e34;
-        --cx-ink-3: #6b6455;
-        --cx-ink-4: #8d8674;
-        --cx-rubric: #9c2b21;
-        --cx-rule: #cabfa6;
-        --cx-rule-soft: #ded4bd;
+        --cx-paper: var(--bg);
+        --cx-paper-2: var(--surface-2);
+        --cx-ink: var(--text);
+        --cx-ink-2: var(--text-2);
+        --cx-ink-3: var(--text-3);
+        --cx-ink-4: var(--text-4);
+        --cx-rubric: var(--accent);
+        --cx-rule: var(--border-strong);
+        --cx-rule-soft: var(--border);
 
-        /* Newsreader rather than a Garamond revival: it carries a variable
-           optical-size axis, so the same family can be tuned per element instead
-           of one static cut doing every job. */
-        --cx-serif: "Newsreader", "Iowan Old Style", Georgia, serif;
-        --cx-fell: "IM Fell English SC", "Newsreader", Georgia, serif;
-        --cx-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+        --cx-serif: var(--font-sans);
+        --cx-fell: var(--font-display);
+        --cx-mono: var(--font-mono);
 
         --cx-measure: 33rem;
         --cx-page: 62rem;
-      }
-
-      html[data-theme="dark"] {
-        --cx-paper: #15120d;
-        --cx-paper-2: #1c1813;
-        --cx-ink: #e9e1cf;
-        --cx-ink-2: #cdc4ae;
-        --cx-ink-3: #a09781;
-        --cx-ink-4: #7d745f;
-        --cx-rubric: #cf6049;
-        --cx-rule: #3d3629;
-        --cx-rule-soft: #2c261d;
       }
 
       .cx {
@@ -566,19 +552,9 @@ const hosts = [
         -webkit-font-smoothing: antialiased;
       }
 
-      /* laid-paper grain, kept faint enough to feel like stock not noise */
-      .cx-grain {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        opacity: 0.28;
-        mix-blend-mode: multiply;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-      }
-      html[data-theme="dark"] .cx-grain { mix-blend-mode: screen; opacity: 0.05; }
-
-      .cx > *:not(.cx-grain) { position: relative; z-index: 1; }
+      /* The grain comes from the core theme's body::before; content is lifted
+         above it so the type keeps its full contrast. */
+      .cx > * { position: relative; z-index: 1; }
 
       .cx code { font-family: var(--cx-mono); font-size: 0.79em; }
       .cx a { color: var(--cx-rubric); text-decoration: none; }

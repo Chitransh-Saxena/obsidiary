@@ -1,78 +1,89 @@
 /* =============================================================================
-   Obsidiary — reading theme.
-   Calm by default: near-white canvas, one blue accent, 5px radii, no glare.
-   Light and dark ride the same tokens; dark is opt-in via html[data-theme].
+   Obsidiary — the reading theme, and the core theme of the whole product.
+   A printed codex: parchment ground, ink text, rubric red for anything the eye
+   should catch. Newsreader for reading (variable optical size), IM Fell English
+   for headings and labels, JetBrains Mono for code.
+   Light and dark ride the same tokens; dark is a scriptorium at night.
    ========================================================================== */
 
 :root {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  /* `--font-sans` keeps its name for compatibility; in a codex the reading face
+     is a serif, and every component that asked for "the body font" still gets it. */
+  --font-sans: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-display: "IM Fell English SC", "Newsreader", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  --bg: #fafafa;
-  --bg-2: #f4f5f7;
-  --surface: #ffffff;
-  --surface-2: #f5f5f5;
-  --border: #ebebeb;
-  --border-strong: #e0e0e0;
+  --bg: #f5f0e4;
+  --bg-2: #ece5d4;
+  --surface: #fbf8ee;
+  --surface-2: #ece5d4;
+  --surface-3: #fbf8ee;
+  --border: #ded4bd;
+  --border-strong: #cabfa6;
+  --line: #e6ddc8;
 
-  --text: #111111;
-  --text-2: #404040;
-  --text-3: #737373;
-  --text-4: #a3a3a3;
+  --text: #221f1a;
+  --text-2: #443e34;
+  --text-3: #6b6455;
+  --text-4: #8d8674;
 
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-subtle: #dbeafe;
-  --accent-ghost: rgba(37, 99, 235, 0.08);
+  --accent: #9c2b21;
+  --accent-hover: #7d1f18;
+  --accent-subtle: rgba(156, 43, 33, 0.2);
+  --accent-ghost: rgba(156, 43, 33, 0.07);
 
-  --green: #16a34a;  --green-subtle: #f0fdf4;
-  --amber: #b45309;  --amber-subtle: #fef8ec;
-  --red: #dc2626;    --red-subtle: #fef2f2;
-  --teal: #0d9488;   --teal-subtle: #f0fdfa;
-  --violet: #7c3aed; --violet-subtle: #f5f0ff;
+  /* Muted to sit on parchment rather than glow off a white screen. */
+  --green: #4a6b2f;  --green-subtle: rgba(74, 107, 47, 0.1);
+  --amber: #8a6410;  --amber-subtle: rgba(138, 100, 16, 0.1);
+  --red: #9c2b21;    --red-subtle: rgba(156, 43, 33, 0.09);
+  --teal: #2c6360;   --teal-subtle: rgba(44, 99, 96, 0.1);
+  --violet: #5c4a7d; --violet-subtle: rgba(92, 74, 125, 0.1);
 
-  --radius: 5px;
-  --radius-sm: 3px;
-  --radius-lg: 9px;
+  /* Print is crisp, not rounded. */
+  --radius: 2px;
+  --radius-sm: 1px;
+  --radius-lg: 3px;
 
-  --shadow-xs: 0 1px 2px rgba(17, 17, 17, 0.05);
-  --shadow-sm: 0 1px 2px rgba(17, 17, 17, 0.04), 0 2px 6px rgba(17, 17, 17, 0.05);
-  --shadow-md: 0 6px 20px rgba(17, 17, 17, 0.07), 0 2px 6px rgba(17, 17, 17, 0.05);
+  /* Ink offsets rather than soft glows. */
+  --shadow-xs: 0 1px 0 rgba(34, 31, 26, 0.04);
+  --shadow-sm: 1px 1px 0 rgba(34, 31, 26, 0.05);
+  --shadow-md: 2px 3px 0 rgba(34, 31, 26, 0.07);
 
   --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
   --t: 150ms var(--ease-soft);
 
-  --measure: 68ch;
+  --measure: 34rem;
 }
 
 html[data-theme="dark"] {
-  --bg: #0c0d10;
-  --bg-2: #0e0f13;
-  --surface: #15161b;
-  --surface-2: #1a1c22;
-  --border: #262932;
-  --border-strong: #333743;
+  --bg: #15120d;
+  --bg-2: #1a160f;
+  --surface: #1c1813;
+  --surface-2: #221d16;
+  --surface-3: #1c1813;
+  --border: #2c261d;
+  --border-strong: #3d3629;
+  --line: #262019;
 
-  --text: #f2f3f5;
-  --text-2: #c3c7d0;
-  --text-3: #9297a3;
-  --text-4: #666b77;
+  --text: #e9e1cf;
+  --text-2: #cdc4ae;
+  --text-3: #a09781;
+  --text-4: #7d745f;
 
-  --accent: #6191ff;
-  --accent-hover: #83a8ff;
-  --accent-subtle: rgba(97, 145, 255, 0.16);
-  --accent-ghost: rgba(97, 145, 255, 0.1);
+  --accent: #cf6049;
+  --accent-hover: #e07a63;
+  --accent-subtle: rgba(207, 96, 73, 0.2);
+  --accent-ghost: rgba(207, 96, 73, 0.1);
 
-  --green: #4ade80;  --green-subtle: rgba(74, 222, 128, 0.12);
-  --amber: #fbbf24;  --amber-subtle: rgba(251, 191, 36, 0.12);
-  --red: #f87171;    --red-subtle: rgba(248, 113, 113, 0.12);
-  --teal: #2dd4bf;   --teal-subtle: rgba(45, 212, 191, 0.12);
-  --violet: #a78bfa; --violet-subtle: rgba(167, 139, 250, 0.14);
+  --green: #8fae6a;  --green-subtle: rgba(143, 174, 106, 0.12);
+  --amber: #cfa049;  --amber-subtle: rgba(207, 160, 73, 0.12);
+  --red: #cf6049;    --red-subtle: rgba(207, 96, 73, 0.12);
+  --teal: #6aada8;   --teal-subtle: rgba(106, 173, 168, 0.12);
+  --violet: #9b8bc0; --violet-subtle: rgba(155, 139, 192, 0.13);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xs: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 1px 1px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 2px 3px 0 rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- base ---------- */
@@ -81,15 +92,31 @@ html[data-theme="dark"] {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 16px;
-  line-height: 1.68;
-  letter-spacing: -0.006em;
+  font-size: 18.5px;
+  line-height: 1.66;
   color: var(--text);
   background: var(--bg);
+  /* Old-style figures and proper ligatures — the reading face has them. */
+  font-feature-settings: "onum" 1, "kern" 1, "liga" 1;
+  font-optical-sizing: auto;
+  font-variation-settings: "opsz" 16;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background var(--t), color var(--t);
 }
+
+/* Laid-paper grain, faint enough to read as stock rather than noise. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.26;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+html[data-theme="dark"] body::before { mix-blend-mode: screen; opacity: 0.05; }
 
 img, svg, video, canvas { display: block; max-width: 100%; }
 a { color: inherit; }
@@ -101,21 +128,39 @@ a { color: inherit; }
   padding: clamp(28px, 6vw, 72px) clamp(20px, 5vw, 40px) 25vh;
 }
 
+/* Titles and section heads take the Fell small caps; anything deeper stays in
+   the reading face, because a long H3 set in small caps stops being readable. */
 .obsidiary-note h1,
-.obsidiary-note h2,
-.obsidiary-note h3,
-.obsidiary-note h4 {
+.obsidiary-note h2 {
   font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.018em;
-  margin: 2em 0 0.6em;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.035em;
+  margin: 2.1em 0 0.6em;
   scroll-margin-top: 2rem;
 }
-.obsidiary-note h1 { font-size: 2.05rem; margin-top: 0; }
-.obsidiary-note h2 { font-size: 1.5rem; }
-.obsidiary-note h3 { font-size: 1.2rem; }
-.obsidiary-note h4 { font-size: 1.02rem; }
+.obsidiary-note h3,
+.obsidiary-note h4,
+.obsidiary-note h5,
+.obsidiary-note h6 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
+  margin: 1.9em 0 0.5em;
+  scroll-margin-top: 2rem;
+  font-variation-settings: "opsz" 24;
+}
+.obsidiary-note h1 { font-size: 1.95rem; margin-top: 0; }
+.obsidiary-note h2 { font-size: 1.35rem; }
+.obsidiary-note h3 { font-size: 1.12rem; }
+.obsidiary-note h4 { font-size: 1rem; }
+
+/* A rule under the top-level heading, as a printed page would have. */
+.obsidiary-note h1 {
+  padding-bottom: 0.35em;
+  border-bottom: 3px double var(--border-strong);
+}
 
 .obsidiary-note p { margin: 0 0 1.15em; }
 .obsidiary-note ul, .obsidiary-note ol { margin: 0 0 1.15em; padding-left: 1.4em; }

@@ -68,7 +68,18 @@ export function loadVaultFromDir(dir: string, options: VaultOptions = {}): Loade
     return { path: rel };
   });
 
-  return { index: buildVault(files, options), root, files: relPaths };
+  const index = buildVault(files, options);
+
+  // Local vaults get modification times for free from the filesystem.
+  for (const note of Object.values(index.notes)) {
+    try {
+      note.mtime = statSync(nodeJoin(root, note.path)).mtimeMs;
+    } catch {
+      /* a note we can't stat simply has no date */
+    }
+  }
+
+  return { index, root, files: relPaths };
 }
 
 /**

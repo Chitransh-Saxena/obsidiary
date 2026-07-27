@@ -12,6 +12,9 @@ export default defineConfig({
       // The repo's README explains the repo, not the notes — it belongs on
       // GitHub, not as a page on the site.
       ignore: ['README.md'],
+      // One GitHub call per note for its last commit date. Set GITHUB_TOKEN in
+      // CI; without one the rate limit costs the dates, not the build.
+      lastModified: true,
       title: 'Chitransh · Notes',
       description: 'Public working notes — engineering, drones, guitar, photography, reading.',
     }),

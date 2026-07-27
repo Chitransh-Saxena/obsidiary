@@ -123,6 +123,60 @@ async function json<T>(
   return (await res.json()) as T;
 }
 
+/**
+ * Last-commit timestamps, one API call per file.
+ *
+ * There is no bulk endpoint for this — the commits API only filters by a single
+ * path — so this costs one request per note. Unauthenticated that is 60 an hour
+ * for the whole build; with a token it is 5000. Failures resolve to `undefined`
+ * rather than throwing, so a rate limit costs you the dates, not the site.
+ */
+export async function fetchLastModified(
+  ref: RemoteRef,
+  paths: string[],
+  resolvedRef: string,
+  options: FetchVaultOptions = {},
+): Promise<Record<string, number>> {
+  const { concurrency = 8 } = options;
+  const doFetch = options.fetchImpl ?? fetch;
+  const prefix = ref.subdir ? `${ref.subdir.replace(/^\/+|\/+$/g, '')}/` : '';
+
+  const headers: Record<string, string> = { accept: 'application/vnd.github+json' };
+  if (options.token) headers.authorization = `Bearer ${options.token}`;
+
+  const out: Record<string, number> = {};
+  let cursor = 0;
+
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const path = paths[cursor++];
+      if (path === undefined) return;
+
+      const full = `${prefix}${path}`;
+      const url =
+        `https://api.github.com/repos/${ref.owner}/${ref.repo}/commits` +
+        `?path=${encodeURIComponent(full)}&sha=${encodeURIComponent(resolvedRef)}&per_page=1`;
+      try {
+        const res = await doFetch(url, { headers });
+        if (!res.ok) return; // almost certainly the rate limit; stop asking
+        const commits = (await res.json()) as Array<{ commit?: { committer?: { date?: string } } }>;
+        const date = commits[0]?.commit?.committer?.date;
+        if (date) {
+          const ms = Date.parse(date);
+          if (Number.isFinite(ms)) out[path] = ms;
+        }
+      } catch {
+        return;
+      }
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.max(1, Math.min(concurrency, paths.length || 1)) }, worker),
+  );
+  return out;
+}
+
 /** Files worth loading: notes, canvases, and attachments (paths only). */
 function isInteresting(path: string): boolean {
   return isNotePath(path) || extname(path) === '.canvas' || isAssetPath(path);

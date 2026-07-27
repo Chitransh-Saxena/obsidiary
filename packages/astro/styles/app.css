@@ -34,8 +34,9 @@ body { overflow-x: hidden; }
 }
 
 .ob-brand {
-  font-family: var(--font-mono);
-  font-size: 0.84rem;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  letter-spacing: 0.07em;
   color: var(--text-2);
   text-decoration: none;
   white-space: nowrap;
@@ -115,13 +116,21 @@ body { overflow-x: hidden; }
 .ob-main { min-width: 0; }
 .ob-main .obsidiary-note { padding-top: clamp(24px, 4vw, 48px); }
 
+/* Lift the page above the paper grain so the text keeps its full contrast. */
+.ob-layout,
+.ob-live-intro,
+.ob-live-status,
+.ob-palette-backdrop { position: relative; z-index: 1; }
+.ob-palette-backdrop { z-index: 100; }
+.ob-topbar { position: sticky; z-index: 40; }
+
 /* ---------- panel headings ---------- */
 .ob-panel-label {
-  font-family: var(--font-mono);
-  font-size: var(--panel-label);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.13em;
   color: var(--text-4);
   margin: 0 0 0.7em;
   padding-left: 2px;
@@ -165,6 +174,10 @@ body { overflow-x: hidden; }
   color: var(--accent);
   font-weight: 500;
 }
+
+.ob-folder-row { display: flex; align-items: center; }
+.ob-folder-row .ob-folder-toggle { width: auto; flex: none; padding-right: 2px; }
+.ob-folder-row .ob-folder-link { flex: 1; }
 
 .ob-folder-toggle { color: var(--text-3); font-weight: 500; }
 .ob-caret {
@@ -404,6 +417,27 @@ body { overflow-x: hidden; }
   margin: 0 0 1.6em;
   max-width: 60ch;
 }
+
+/* ---------- per-note colophon ---------- */
+.ob-colophon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 3.4rem;
+  padding-top: 1rem;
+  border-top: 3px double var(--border-strong);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+.ob-colophon time { font-variant-numeric: normal; }
+.ob-colophon-links { display: flex; flex-wrap: wrap; gap: 16px; }
+.ob-colophon a { color: var(--text-3); text-decoration: none; }
+.ob-colophon a:hover { color: var(--accent); }
 
 /* ---------- tag pages ---------- */
 .ob-tagpage {

@@ -108,8 +108,27 @@ export interface Note {
   headings: Heading[];
   blocks: BlockAnchor[];
   links: ResolvedLink[];
-  /** Unix mtime in ms, when the loader can supply one. */
+  /**
+   * Last modification, unix ms. From the filesystem for a local vault, or the
+   * last commit that touched the file for a remote one. Absent when unknown.
+   */
   mtime?: number;
+}
+
+/** Where a published vault came from, so a page can link back to its source. */
+export interface VaultSource {
+  /** e.g. `Chitransh-Saxena/notes` */
+  repo: string;
+  /** Branch, tag or commit the build read. */
+  ref: string;
+  /** Folder within the repo treated as the vault root, if any. */
+  subdir?: string;
+  /** `https://github.com/<repo>` */
+  homeUrl: string;
+  /** Prefix for viewing a file: append the vault-relative path. */
+  blobBase: string;
+  /** Prefix for editing a file: append the vault-relative path. */
+  editBase: string;
 }
 
 export interface Asset {

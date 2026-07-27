@@ -17,6 +17,8 @@ export interface TreeFolder {
   children: TreeNode[];
   /** A note that acts as this folder's landing page (`folder/index.md`). */
   indexUrl?: string;
+  /** Vault path of that landing note, so the sidebar can mark it current. */
+  indexPath?: string;
 }
 
 export interface TreeNote {
@@ -73,6 +75,7 @@ export function buildFileTree(index: VaultIndex, options: TreeOptions = {}): Tre
       // The root index is the site home, not a folder landing page.
       if (folder.path !== '') {
         folder.indexUrl = note.url;
+        folder.indexPath = note.path;
         continue;
       }
     }

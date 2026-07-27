@@ -9,7 +9,15 @@
 
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
-import { buildVault, fetchVaultFiles, parseRepoRef, type VaultIndex, type VaultOptions } from 'obsidiary';
+import {
+  buildVault,
+  fetchLastModified,
+  fetchVaultFiles,
+  parseRepoRef,
+  type VaultIndex,
+  type VaultOptions,
+  type VaultSource,
+} from 'obsidiary';
 import { loadVaultFromDir, syncAssets, type LoadedVault } from './load.js';
 
 export * from './load.js';
@@ -43,6 +51,19 @@ export interface ObsidiaryOptions extends VaultOptions {
    * doesn't own is worse than none.
    */
   liveExamples?: Array<{ label: string; repo: string }>;
+  /**
+   * Show a "last updated" date and links back to the source file.
+   *
+   * Free for a local vault (filesystem mtime). For a remote vault it costs one
+   * GitHub API call per note — fine with a token, and it degrades to no dates
+   * rather than failing if the rate limit is hit.
+   */
+  lastModified?: boolean;
+  /**
+   * Where the vault lives, for source links. Derived automatically in `repo`
+   * mode; supply it for a local vault that is committed somewhere.
+   */
+  source?: { repo: string; ref?: string; path?: string };
 }
 
 const VIRTUAL_ID = 'virtual:obsidiary';
@@ -57,6 +78,8 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
     description,
     live = false,
     liveExamples = [],
+    lastModified = false,
+    source: sourceOption,
     ...vaultOptions
   } = options;
 
@@ -69,10 +92,31 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
   let vaultRoot = '';
   let publicDir = '';
 
-  const site = {
+  let source: VaultSource | null = null;
+  const site: {
+    title: string;
+    description: string;
+    liveExamples: typeof liveExamples;
+    source: VaultSource | null;
+  } = {
     title: title ?? 'Notes',
     description: description ?? '',
     liveExamples,
+    source: null,
+  };
+
+  const makeSource = (repo: string, ref: string, path?: string): VaultSource => {
+    const home = `https://github.com/${repo}`;
+    const prefix = path ? `${path.replace(/^\.?\/+|\/+$/g, '')}/` : '';
+    const result: VaultSource = {
+      repo,
+      ref,
+      homeUrl: home,
+      blobBase: `${home}/blob/${ref}/${prefix}`,
+      editBase: `${home}/edit/${ref}/${prefix}`,
+    };
+    if (prefix) result.subdir = prefix.replace(/\/$/, '');
+    return result;
   };
 
   return {
@@ -99,6 +143,26 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
           if (remote.truncated) {
             logger.warn('the repository listing was truncated — some notes were not loaded.');
           }
+
+          source = makeSource(`${ref.owner}/${ref.repo}`, remote.resolvedRef, ref.subdir);
+
+          if (lastModified) {
+            const paths = Object.keys(index.notes);
+            const dates = await fetchLastModified(ref, paths, remote.resolvedRef, {
+              token: token ?? process.env.GITHUB_TOKEN,
+            });
+            for (const [path, ms] of Object.entries(dates)) {
+              const note = index.notes[path];
+              if (note) note.mtime = ms;
+            }
+            const found = Object.keys(dates).length;
+            if (found < paths.length) {
+              logger.warn(
+                `last-modified dates for ${found}/${paths.length} notes — ` +
+                  'the GitHub API rate limit was likely reached. Set GITHUB_TOKEN to raise it.',
+              );
+            }
+          }
         } else {
           vaultRoot = fileURLToPath(new URL(vault!, config.root));
           local = loadVaultFromDir(vaultRoot, vaultOptions);
@@ -107,6 +171,11 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
           if (copied) logger.info(`${copied} attachments copied`);
           for (const rel of local.files) addWatchFile(new URL(rel, `file://${vaultRoot}/`));
         }
+
+        if (sourceOption) {
+          source = makeSource(sourceOption.repo, sourceOption.ref ?? 'main', sourceOption.path);
+        }
+        site.source = source;
 
         const noteCount = Object.keys(index.notes).length;
         const unresolved = Object.keys(index.graph.unresolved).length;
