@@ -105,12 +105,15 @@ body {
   transition: background var(--t), color var(--t);
 }
 
-/* Laid-paper grain, faint enough to read as stock rather than noise. */
+/* Laid-paper grain, faint enough to read as stock rather than noise.
+   Sits *behind* the content at z-index -1 rather than over it: lifting every
+   container above a z-index-0 overlay created stacking contexts that trapped
+   anything trying to go full-screen, and it keeps the type perfectly crisp. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   opacity: 0.26;
   mix-blend-mode: multiply;

@@ -5,6 +5,7 @@ import {
   createRenderer,
   edgeGeometry,
   parseCanvas,
+  resolveTarget,
   sortForPaint,
   type CanvasNode,
   type Note,
@@ -33,6 +34,14 @@ function contentFor(node: CanvasNode): string {
   return '';
 }
 
+// A file node shows another note; it should be openable, not just readable.
+const ctx = { notes: index.notes, assets: index.assets, lookups: index.lookups };
+function targetOf(file: string): { url: string; title: string } | null {
+  const hit = resolveTarget(ctx, file, note.path);
+  if (hit.kind !== 'note' || !hit.toPath || !hit.toUrl) return null;
+  return { url: hit.toUrl, title: index.notes[hit.toPath]?.title ?? file };
+}
+
 const painted = sortForPaint(doc?.nodes ?? []);
 const edges = (doc?.edges ?? []).flatMap((edge) => {
   const from = byId.get(edge.fromNode);
@@ -52,7 +61,12 @@ const edges = (doc?.edges ?? []).flatMap((edge) => {
       <div class="ob-canvas-bar">
         <span class="ob-canvas-title">{note.title}</span>
         <span class="ob-canvas-hint">drag to pan · scroll to zoom</span>
-        <button class="ob-iconbtn" type="button" data-canvas-fit title="Fit to view">⤢</button>
+        <div class="ob-canvas-tools">
+          <button class="ob-iconbtn" type="button" data-canvas-zoom="-1" title="Zoom out (−)">−</button>
+          <button class="ob-iconbtn" type="button" data-canvas-fit title="Fit to view (0)">Fit</button>
+          <button class="ob-iconbtn" type="button" data-canvas-zoom="1" title="Zoom in (+)">+</button>
+          <button class="ob-iconbtn" type="button" data-canvas-full title="Full view (f · Esc to exit)">⤢ Full view</button>
+        </div>
       </div>
 
       <div class="ob-canvas-viewport" data-canvas-viewport>
@@ -105,8 +119,15 @@ const edges = (doc?.edges ?? []).flatMap((edge) => {
                 </a>
               );
             }
+            const target = node.type === 'file' ? targetOf(node.file) : null;
             return (
               <div class={`ob-canvas-node is-${node.type}`} style={style}>
+                {target && (
+                  <a class="ob-canvas-open" href={target.url}>
+                    <span>{target.title}</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                )}
                 <div class="ob-canvas-body obsidiary-note" set:html={contentFor(node)} />
               </div>
             );
@@ -129,17 +150,39 @@ const edges = (doc?.edges ?? []).flatMap((edge) => {
       world.style.transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`;
     };
 
+    const MIN_READABLE = 0.55;
+
     const fit = (): void => {
       const vw = viewport.clientWidth;
       const vh = viewport.clientHeight;
       const cw = world.offsetWidth;
       const ch = world.offsetHeight;
       if (!cw || !ch) return;
-      // Never zoom past 1:1 — a small canvas blown up looks broken.
-      view.scale = Math.min(vw / cw, vh / ch, 1);
+      // Never zoom past 1:1 — a small canvas blown up looks broken. And never
+      // shrink below legibility: an unreadable overview is worse than one you
+      // have to pan, so the floor wins and the reader scrolls.
+      view.scale = Math.max(MIN_READABLE, Math.min(vw / cw, vh / ch, 1));
       view.tx = (vw - cw * view.scale) / 2;
       view.ty = (vh - ch * view.scale) / 2;
       apply();
+    };
+
+    /** Zoom about the centre of the viewport, for the buttons and keyboard. */
+    const zoomBy = (factor: number): void => {
+      const mx = viewport.clientWidth / 2;
+      const my = viewport.clientHeight / 2;
+      const next = Math.min(3, Math.max(0.1, view.scale * factor));
+      view.tx = mx - ((mx - view.tx) / view.scale) * next;
+      view.ty = my - ((my - view.ty) / view.scale) * next;
+      view.scale = next;
+      apply();
+    };
+
+    const setFull = (on: boolean): void => {
+      root.classList.toggle('is-full', on);
+      document.body.style.overflow = on ? 'hidden' : '';
+      // The viewport just changed size; re-fit into it.
+      requestAnimationFrame(fit);
     };
 
     let dragging = false;
@@ -190,6 +233,25 @@ const edges = (doc?.edges ?? []).flatMap((edge) => {
     );
 
     root.querySelector('[data-canvas-fit]')?.addEventListener('click', fit);
+    for (const button of root.querySelectorAll<HTMLElement>('[data-canvas-zoom]')) {
+      button.addEventListener('click', () =>
+        zoomBy(Number(button.dataset.canvasZoom) > 0 ? 1.25 : 1 / 1.25),
+      );
+    }
+    root
+      .querySelector('[data-canvas-full]')
+      ?.addEventListener('click', () => setFull(!root.classList.contains('is-full')));
+
+    document.addEventListener('keydown', (e) => {
+      const typing = /^(input|textarea|select)$/i.test((e.target as HTMLElement)?.tagName ?? '');
+      if (typing) return;
+      if (e.key === 'Escape' && root.classList.contains('is-full')) setFull(false);
+      else if (e.key === 'f') setFull(!root.classList.contains('is-full'));
+      else if (e.key === '+' || e.key === '=') zoomBy(1.25);
+      else if (e.key === '-') zoomBy(1 / 1.25);
+      else if (e.key === '0') fit();
+    });
+
     new ResizeObserver(() => fit()).observe(viewport);
     fit();
   });

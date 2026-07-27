@@ -116,13 +116,8 @@ body { overflow-x: hidden; }
 .ob-main { min-width: 0; }
 .ob-main .obsidiary-note { padding-top: clamp(24px, 4vw, 48px); }
 
-/* Lift the page above the paper grain so the text keeps its full contrast. */
-.ob-layout,
-.ob-live-intro,
-.ob-live-status,
-.ob-palette-backdrop { position: relative; z-index: 1; }
-.ob-palette-backdrop { z-index: 100; }
-.ob-topbar { position: sticky; z-index: 40; }
+/* Nothing needs lifting: the grain sits behind the content. Deliberately no
+   z-index on .ob-layout — it would trap the canvas's full view inside it. */
 
 /* ---------- panel headings ---------- */
 .ob-panel-label {
@@ -380,24 +375,31 @@ body { overflow-x: hidden; }
   cursor: grab;
   touch-action: none;
 }
-.ob-graph-reset {
+.ob-graph-tools {
   position: absolute;
   right: 6px;
   bottom: 6px;
-  font: inherit;
-  font-size: 0.72rem;
+  display: flex;
+  gap: 5px;
+  opacity: 0;
+  transition: opacity var(--t);
+}
+.ob-graph-wrap:hover .ob-graph-tools,
+.ob-graph-wrap:focus-within .ob-graph-tools { opacity: 1; }
+.ob-graph-btn {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
   line-height: 1;
-  color: var(--text-4);
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  color: var(--text-3);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 4px 6px;
+  padding: 5px 8px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--t), color var(--t);
+  text-decoration: none;
 }
-.ob-graph-wrap:hover .ob-graph-reset { opacity: 1; }
-.ob-graph-reset:hover { color: var(--accent); }
+.ob-graph-btn:hover { color: var(--accent); border-color: var(--accent-subtle); }
 .ob-graph-wrap.is-bare .ob-graph { height: 100%; }
 
 .ob-graph-page {
@@ -506,6 +508,48 @@ body { overflow-x: hidden; }
   font-size: 0.74rem;
   color: var(--text-4);
 }
+.ob-canvas-tools { display: flex; align-items: center; gap: 6px; }
+.ob-canvas-tools .ob-iconbtn {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  padding: 5px 9px;
+  min-width: 30px;
+}
+
+/* Full view: the board takes the window, because a canvas at rail width is
+   a diagram you can see but not read. */
+.ob-canvas.is-full {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  height: 100vh;
+  background: var(--bg);
+}
+.ob-canvas.is-full .ob-canvas-bar { padding-left: 20px; padding-right: 20px; }
+
+/* A file node is another note; make that openable rather than merely visible. */
+.ob-canvas-open {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+  text-decoration: none;
+}
+.ob-canvas-open:hover { color: var(--accent); background: var(--accent-ghost); }
+.ob-canvas-open span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ob-canvas-node.is-file .ob-canvas-body { height: calc(100% - 30px); }
 
 .ob-canvas-viewport {
   position: relative;

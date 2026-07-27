@@ -60,7 +60,10 @@ function hash(s: string): number {
       <div class="ob-graph" style={`height:${height}px`}>
         <canvas id={id} data-graph={id}></canvas>
         <script type="application/json" data-graph-for={id} set:html={JSON.stringify(payload)} />
-        <button class="ob-graph-reset" type="button" data-reset-for={id} title="Reset view">⤢</button>
+        <div class="ob-graph-tools">
+          <button class="ob-graph-btn" type="button" data-reset-for={id} title="Reset view">Reset</button>
+          {!bare && <a class="ob-graph-btn" href="/graph" title="The whole vault">Full view ⤢</a>}
+        </div>
       </div>
     </section>
   )

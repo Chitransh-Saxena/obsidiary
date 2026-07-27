@@ -1,0 +1,57 @@
+# Build and deploy the two sites.
+#
+# The notes site publishes a different repository, so pushing a note there does
+# not trigger anything here. The hourly schedule is what makes "push a note, the
+# site updates" true — and it needs nothing whatsoever in the notes repo.
+#
+# Reading a public vault requires no authentication.
+#
+# One-time setup: add a repository secret CLOUDFLARE_API_TOKEN, created from the
+# "Edit Cloudflare Workers" template.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: landing site
+            dir: apps/site
+          - name: notes
+            dir: apps/notes
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build packages
+        run: npx tsc --build packages/core packages/astro
+
+      - name: Build ${{ matrix.name }}
+        working-directory: ${{ matrix.dir }}
+        run: npx astro build
+
+      - name: Deploy ${{ matrix.name }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: ${{ matrix.dir }}

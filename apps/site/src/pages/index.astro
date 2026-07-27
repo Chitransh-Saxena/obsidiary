@@ -552,9 +552,8 @@ const hosts = [
         -webkit-font-smoothing: antialiased;
       }
 
-      /* The grain comes from the core theme's body::before; content is lifted
-         above it so the type keeps its full contrast. */
-      .cx > * { position: relative; z-index: 1; }
+      /* The grain comes from the core theme's body::before, which sits behind
+         the content — nothing here needs lifting. */
 
       .cx code { font-family: var(--cx-mono); font-size: 0.79em; }
       .cx a { color: var(--cx-rubric); text-decoration: none; }
