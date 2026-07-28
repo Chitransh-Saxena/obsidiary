@@ -10,6 +10,6 @@
   "files": ["index.js", "template", "README.md"],
   "keywords": ["obsidian", "publish", "digital-garden", "astro", "static-site"],
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   }
 }

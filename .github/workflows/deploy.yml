@@ -6,8 +6,9 @@
 #
 # Reading a public vault requires no authentication.
 #
-# One-time setup: add a repository secret CLOUDFLARE_API_TOKEN, created from the
-# "Edit Cloudflare Workers" template.
+# To actually publish, add a repository secret CLOUDFLARE_API_TOKEN, created from
+# the "Edit Cloudflare Workers" template. Until it exists the workflow still
+# builds both sites — it just skips the deploy rather than failing.
 
 name: Deploy
 
@@ -25,6 +26,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      # Lifted to env so a step `if:` can test whether it was ever configured.
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -38,7 +42,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Astro 6 requires >=22.12. Node 20 builds nothing and fails late,
+          # after install, which is a slow way to learn that.
+          node-version: 22
           cache: npm
 
       - run: npm ci
@@ -51,7 +57,14 @@ jobs:
         run: npx astro build
 
       - name: Deploy ${{ matrix.name }}
+        if: env.CF_TOKEN != ''
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: ${{ matrix.dir }}
+
+      - name: Deploy skipped
+        if: env.CF_TOKEN == ''
+        run: |
+          echo "::notice::Built ${{ matrix.name }} but did not deploy —"\
+               "CLOUDFLARE_API_TOKEN is not set on this repository."
