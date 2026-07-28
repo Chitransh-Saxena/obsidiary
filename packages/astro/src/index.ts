@@ -198,6 +198,10 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
         }
 
         updateConfig({
+          // Fetch a page as soon as the pointer touches its link. Navigation
+          // then feels instant without a client router, which would mean
+          // re-binding every script in the shell on each transition.
+          prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
           vite: {
             plugins: [
               {

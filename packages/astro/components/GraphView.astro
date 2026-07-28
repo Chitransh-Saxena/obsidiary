@@ -308,10 +308,13 @@ function hash(s: string): number {
 
     // ---------- run ----------
     resize();
+    const reveal = (): void => canvas.setAttribute('data-ready', '');
+
     if (reduceMotion) {
       sim.run();
       fit();
       draw();
+      reveal();
     } else {
       // Settle a little before the first paint so it doesn't start as a blob,
       // then animate the rest — the motion is what makes the shape readable.
@@ -323,7 +326,10 @@ function hash(s: string): number {
         draw();
         if (alive) requestAnimationFrame(step);
       };
-      requestAnimationFrame(step);
+      requestAnimationFrame(() => {
+        step();
+        reveal();
+      });
     }
 
     let resizeQueued = false;

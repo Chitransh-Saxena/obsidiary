@@ -374,6 +374,14 @@ body { overflow-x: hidden; }
   display: block;
   cursor: grab;
   touch-action: none;
+  /* Fade in on first paint: the simulation's first frames are a blob, and
+     watching it resolve out of nothing is calmer than having it appear. */
+  opacity: 0;
+  transition: opacity 420ms var(--ease-soft);
+}
+.ob-graph canvas[data-ready] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ob-graph canvas { transition: none; }
 }
 .ob-graph-tools {
   position: absolute;

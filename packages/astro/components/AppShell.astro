@@ -207,8 +207,18 @@ const summary = typeof description === 'string' ? description : site.description
         );
       });
 
-      // Keep the current note in view in a long tree.
-      document.querySelector('.ob-tree a[aria-current="page"]')?.scrollIntoView({ block: 'center' });
+      // Keep the current note in view in a long tree — but only when it isn't
+      // already visible. Yanking a short tree to centre on every page load reads
+      // as a glitch.
+      const current = document.querySelector<HTMLElement>('.ob-tree [aria-current="page"]');
+      const sidebar = document.getElementById('ob-sidebar');
+      if (current && sidebar) {
+        const item = current.getBoundingClientRect();
+        const frame = sidebar.getBoundingClientRect();
+        if (item.top < frame.top + 8 || item.bottom > frame.bottom - 8) {
+          current.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior });
+        }
+      }
 
       // ---------- outline scroll-spy ----------
       const outlineLinks = [...document.querySelectorAll<HTMLAnchorElement>('#ob-outline a')];

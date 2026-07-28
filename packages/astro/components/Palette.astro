@@ -193,5 +193,15 @@
     document.getElementById('ob-search-trigger')?.addEventListener('click', open);
     // Record the current page so recents are useful on the next open.
     remember(location.pathname);
+
+    // Warm the index once the page is otherwise idle, so ⌘K is instant the
+    // first time rather than showing an empty list while a fetch lands.
+    const warm = () => void load();
+    if ('requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void, o?: object) => void })
+        .requestIdleCallback(warm, { timeout: 3000 });
+    } else {
+      setTimeout(warm, 1500);
+    }
   }
 </script>
