@@ -187,6 +187,27 @@ body { overflow-x: hidden; }
 
 .ob-tree .ob-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ---------- credit ---------- */
+.ob-credit {
+  margin-top: 28px;
+  padding: 12px 8px 4px 2px;
+  border-top: 1px solid var(--line);
+}
+.ob-credit a {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  color: var(--text-4);
+  text-decoration: none;
+  transition: color var(--t);
+}
+.ob-credit a:hover { color: var(--accent); }
+.ob-credit b { font-weight: 400; color: var(--text-3); }
+.ob-credit a:hover b { color: var(--accent); }
+
 /* ---------- outline ---------- */
 .ob-outline { list-style: none; margin: 0; padding: 0; }
 .ob-outline li { margin: 0; }

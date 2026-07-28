@@ -1,5 +1,5 @@
 ---
-import { index } from 'virtual:obsidiary';
+import { index, site } from 'virtual:obsidiary';
 import { ancestorFolders, buildFileTree, noteCount } from 'obsidiary';
 import TreeItem from './TreeItem.astro';
 
@@ -23,4 +23,15 @@ const total = noteCount(tree);
       <TreeItem nodes={tree} currentPath={currentPath} open={open} />
     </div>
   </nav>
+
+  {
+    site.credit && (
+      <footer class="ob-credit">
+        <a href={site.credit.url}>
+          Published with <b>Obsidiary</b>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </footer>
+    )
+  }
 </aside>

@@ -6,6 +6,7 @@ declare module 'virtual:obsidiary' {
     description: string;
     liveExamples: Array<{ label: string; repo: string }>;
     source: VaultSource | null;
+    credit: { url: string } | null;
   };
   export default index;
 }

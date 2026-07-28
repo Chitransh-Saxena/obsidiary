@@ -64,7 +64,17 @@ export interface ObsidiaryOptions extends VaultOptions {
    * mode; supply it for a local vault that is committed somewhere.
    */
   source?: { repo: string; ref?: string; path?: string };
+  /**
+   * Show a quiet "Published with Obsidiary" link at the foot of the sidebar.
+   * On by default — a published vault should say what published it, and it is
+   * the only route back to the project from someone else's notes. Set false to
+   * remove it; nothing checks.
+   */
+  credit?: boolean;
 }
+
+/** Where the credit points. The project's own site. */
+const PROJECT_URL = 'https://obsidiary.pulsar-projects.org';
 
 const VIRTUAL_ID = 'virtual:obsidiary';
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -80,6 +90,7 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
     liveExamples = [],
     lastModified = false,
     source: sourceOption,
+    credit = true,
     ...vaultOptions
   } = options;
 
@@ -98,11 +109,13 @@ export function obsidiary(options: ObsidiaryOptions): AstroIntegration {
     description: string;
     liveExamples: typeof liveExamples;
     source: VaultSource | null;
+    credit: { url: string } | null;
   } = {
     title: title ?? 'Notes',
     description: description ?? '',
     liveExamples,
     source: null,
+    credit: credit ? { url: PROJECT_URL } : null,
   };
 
   const makeSource = (repo: string, ref: string, path?: string): VaultSource => {
