@@ -60,7 +60,7 @@ const edges = (doc?.edges ?? []).flatMap((edge) => {
     <div class="ob-canvas" data-canvas style={`--cw:${bounds.width}px;--ch:${bounds.height}px`}>
       <div class="ob-canvas-bar">
         <span class="ob-canvas-title">{note.title}</span>
-        <span class="ob-canvas-hint">drag to pan · scroll to zoom</span>
+        <span class="ob-canvas-hint">drag to pan · ⌘-scroll or pinch to zoom</span>
         <div class="ob-canvas-tools">
           <button class="ob-iconbtn" type="button" data-canvas-zoom="-1" title="Zoom out (−)">−</button>
           <button class="ob-iconbtn" type="button" data-canvas-fit title="Fit to view (0)">Fit</button>
@@ -219,6 +219,11 @@ const edges = (doc?.edges ?? []).flatMap((edge) => {
     viewport.addEventListener(
       'wheel',
       (e) => {
+        // In full view there is no page behind to scroll, so the wheel is ours.
+        // Inline, a plain wheel belongs to the page — see the same reasoning in
+        // GraphView. Trackpad pinch arrives as ctrlKey and always zooms.
+        const owned = root.classList.contains('is-full') || e.ctrlKey || e.metaKey;
+        if (!owned) return;
         e.preventDefault();
         const rect = viewport.getBoundingClientRect();
         const mx = e.clientX - rect.left;

@@ -53,33 +53,59 @@
   --t: 150ms var(--ease-soft);
 
   --measure: 34rem;
+
+  /* Cluster inks for the graph. Chosen to read as pigments on parchment —
+     distinguishable from each other, and none of them louder than the rubric. */
+  --cluster-1: #9c2b21;
+  --cluster-2: #2f5d7c;
+  --cluster-3: #4a6b2f;
+  --cluster-4: #8a5a10;
+  --cluster-5: #5c4a7d;
+  --cluster-6: #2c6360;
+  --cluster-7: #8a3d5e;
+  --cluster-8: #6b5334;
 }
 
+/* Dark is a scriptorium at night, not a black screen.
+   Three deliberate choices, all about eye strain over a long read:
+   the ground is lifted off true black so bright type doesn't halate against it;
+   the ink is softened from cream to a warm off-white; and each surface step is
+   wide enough to actually see, so the hierarchy does the work instead of the
+   contrast. */
 html[data-theme="dark"] {
-  --bg: #15120d;
-  --bg-2: #1a160f;
-  --surface: #1c1813;
-  --surface-2: #221d16;
-  --surface-3: #1c1813;
-  --border: #2c261d;
-  --border-strong: #3d3629;
-  --line: #262019;
+  --bg: #191510;
+  --bg-2: #1e1a14;
+  --surface: #231e17;
+  --surface-2: #2a241b;
+  --surface-3: #231e17;
+  --border: #372f24;
+  --border-strong: #4b4234;
+  --line: #2c261d;
 
-  --text: #e9e1cf;
-  --text-2: #cdc4ae;
-  --text-3: #a09781;
-  --text-4: #7d745f;
+  --text: #e0d8c6;
+  --text-2: #c4bba6;
+  --text-3: #9a917c;
+  --text-4: #746c5a;
 
-  --accent: #cf6049;
-  --accent-hover: #e07a63;
-  --accent-subtle: rgba(207, 96, 73, 0.2);
-  --accent-ghost: rgba(207, 96, 73, 0.1);
+  --accent: #d4715a;
+  --accent-hover: #e58d76;
+  --accent-subtle: rgba(212, 113, 90, 0.2);
+  --accent-ghost: rgba(212, 113, 90, 0.1);
 
-  --green: #8fae6a;  --green-subtle: rgba(143, 174, 106, 0.12);
-  --amber: #cfa049;  --amber-subtle: rgba(207, 160, 73, 0.12);
-  --red: #cf6049;    --red-subtle: rgba(207, 96, 73, 0.12);
-  --teal: #6aada8;   --teal-subtle: rgba(106, 173, 168, 0.12);
-  --violet: #9b8bc0; --violet-subtle: rgba(155, 139, 192, 0.13);
+  --green: #97b374;  --green-subtle: rgba(151, 179, 116, 0.12);
+  --amber: #d1a75a;  --amber-subtle: rgba(209, 167, 90, 0.12);
+  --red: #d4715a;    --red-subtle: rgba(212, 113, 90, 0.12);
+  --teal: #74b2ad;   --teal-subtle: rgba(116, 178, 173, 0.12);
+  --violet: #a294c4; --violet-subtle: rgba(162, 148, 196, 0.13);
+
+  --cluster-1: #d4715a;
+  --cluster-2: #74a3c9;
+  --cluster-3: #97b374;
+  --cluster-4: #d1a75a;
+  --cluster-5: #a294c4;
+  --cluster-6: #74b2ad;
+  --cluster-7: #cf85a5;
+  --cluster-8: #b09a72;
 
   --shadow-xs: 0 1px 0 rgba(0, 0, 0, 0.3);
   --shadow-sm: 1px 1px 0 rgba(0, 0, 0, 0.35);
@@ -136,7 +162,9 @@ body::before {
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-html[data-theme="dark"] body::before { mix-blend-mode: screen; opacity: 0.05; }
+/* Screen-blended grain lightens rather than darkens, so it needs far less
+   here — much more and the dark ground turns muddy. */
+html[data-theme="dark"] body::before { mix-blend-mode: screen; opacity: 0.03; }
 
 img, svg, video, canvas { display: block; max-width: 100%; }
 a { color: inherit; }

@@ -408,6 +408,46 @@ body { overflow-x: hidden; }
   text-decoration: none;
 }
 .ob-graph-btn:hover { color: var(--accent); border-color: var(--accent-subtle); }
+
+/* ---------- cluster legend ---------- */
+.ob-legend { margin-top: 18px; }
+.ob-legend ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 4px 22px;
+}
+.ob-legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+.ob-legend-ink {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  transform: translateY(-1px);
+}
+.ob-legend a {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-2);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ob-legend a:hover { color: var(--accent); }
+.ob-legend-n {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-4);
+}
 .ob-graph-wrap.is-bare .ob-graph { height: 100%; }
 
 .ob-graph-page {

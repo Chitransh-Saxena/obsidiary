@@ -1,6 +1,6 @@
 ---
 import { index } from 'virtual:obsidiary';
-import { fullGraph, neighborhood } from 'obsidiary';
+import { detectCommunities, fullGraph, neighborhood } from 'obsidiary';
 
 interface Props {
   /** `local` shows the neighbourhood of `currentPath`; `global` shows the vault. */
@@ -25,6 +25,9 @@ const {
 
 const sub = mode === 'global' ? fullGraph(index, maxNodes) : neighborhood(index, currentPath, depth, maxNodes);
 
+// Clusters come from the links themselves, not from folders — see cluster.ts.
+const clusters = detectCommunities(sub.nodes, sub.links);
+
 const payload = {
   current: currentPath,
   nodes: sub.nodes.map((path) => ({
@@ -32,10 +35,25 @@ const payload = {
     title: index.notes[path]?.title ?? path,
     url: index.notes[path]?.url ?? '#',
     canvas: index.notes[path]?.kind === 'canvas',
+    cluster: clusters.of[path] ?? 0,
+    hub: clusters.communities.some((c) => c.hub === path && c.members.length > 2),
   })),
   links: sub.links,
   truncated: sub.truncated,
 };
+
+// A cluster of one is a lone note, not a theme worth naming.
+const legend = clusters.communities
+  .filter((c) => c.members.length > 1)
+  .slice(0, 8)
+  .map((c) => ({
+    id: c.id,
+    title: index.notes[c.hub]?.title ?? c.hub,
+    count: c.members.length,
+    url: index.notes[c.hub]?.url ?? '#',
+  }));
+
+const strongStructure = clusters.modularity >= 0.3;
 
 // A local graph of one lonely node is just a dot — not worth the space.
 const worthShowing = sub.nodes.length > 1;
@@ -65,6 +83,26 @@ function hash(s: string): number {
           {!bare && <a class="ob-graph-btn" href="/graph" title="The whole vault">Full view ⤢</a>}
         </div>
       </div>
+
+      {
+        bare && legend.length > 1 && (
+          <div class="ob-legend">
+            <p class="ob-panel-label">
+              {legend.length} clusters, found in the links
+              {!strongStructure && ' · loosely separated'}
+            </p>
+            <ul>
+              {legend.map((entry) => (
+                <li>
+                  <span class="ob-legend-ink" style={`background: var(--cluster-${(entry.id % 8) + 1})`} />
+                  <a href={entry.url}>{entry.title}</a>
+                  <span class="ob-legend-n">{entry.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
     </section>
   )
 }
@@ -72,7 +110,14 @@ function hash(s: string): number {
 <script>
   import { boundsOf, createSimulation } from 'obsidiary';
 
-  interface GraphNode { id: string; title: string; url: string; canvas: boolean }
+  interface GraphNode {
+    id: string;
+    title: string;
+    url: string;
+    canvas: boolean;
+    cluster: number;
+    hub: boolean;
+  }
   interface Payload {
     current: string;
     nodes: GraphNode[];
@@ -112,12 +157,20 @@ function hash(s: string): number {
       const s = getComputedStyle(document.documentElement);
       return {
         node: s.getPropertyValue('--text-4').trim() || '#a3a3a3',
-        accent: s.getPropertyValue('--accent').trim() || '#2563eb',
-        edge: s.getPropertyValue('--border-strong').trim() || '#e0e0e0',
-        text: s.getPropertyValue('--text-3').trim() || '#737373',
-        strong: s.getPropertyValue('--text').trim() || '#111',
+        accent: s.getPropertyValue('--accent').trim() || '#9c2b21',
+        edge: s.getPropertyValue('--border-strong').trim() || '#cabfa6',
+        text: s.getPropertyValue('--text-3').trim() || '#6b6455',
+        strong: s.getPropertyValue('--text').trim() || '#221f1a',
+        surface: s.getPropertyValue('--surface').trim() || '#fbf8ee',
+        clusters: Array.from({ length: 8 }, (_, i) =>
+          s.getPropertyValue(`--cluster-${i + 1}`).trim() || '#9c2b21',
+        ),
       };
     }
+    const inkOf = (node: { id: string }): string => {
+      const info = meta.get(node.id);
+      return palette.clusters[(info?.cluster ?? 0) % palette.clusters.length] as string;
+    };
     new MutationObserver(() => {
       palette = readPalette();
       draw();
@@ -174,14 +227,19 @@ function hash(s: string): number {
 
       const active = hovered ? new Set([hovered, ...(neighbours.get(hovered) ?? [])]) : null;
 
-      ctx.lineWidth = 1;
       for (const link of sim.links) {
         const a = sim.nodes.find((n) => n.id === link.source);
         const b = sim.nodes.find((n) => n.id === link.target);
         if (!a || !b) continue;
         const lit = !active || (active.has(a.id) && active.has(b.id));
-        ctx.globalAlpha = lit ? 0.75 : 0.12;
-        ctx.strokeStyle = palette.edge;
+
+        // An edge inside a cluster takes its ink; one that crosses between two
+        // stays neutral. The clusters then read as shapes, not just as colours.
+        const sameCluster = meta.get(a.id)?.cluster === meta.get(b.id)?.cluster;
+        ctx.strokeStyle = sameCluster ? inkOf(a) : palette.edge;
+        ctx.lineWidth = sameCluster ? 1.15 : 0.9;
+        ctx.globalAlpha = lit ? (sameCluster ? 0.5 : 0.3) : 0.08;
+
         const p1 = toScreen(a);
         const p2 = toScreen(b);
         ctx.beginPath();
@@ -194,13 +252,32 @@ function hash(s: string): number {
       for (const node of sim.nodes) {
         const p = toScreen(node);
         const isCurrent = node.id === data.current;
+        const info = meta.get(node.id);
         const lit = !active || active.has(node.id);
+        const r = radiusOf(node.degree) * (isCurrent ? 1.35 : 1);
+        const ink = inkOf(node);
 
-        ctx.globalAlpha = lit ? 1 : 0.2;
+        ctx.globalAlpha = lit ? 1 : 0.18;
+
+        // A cluster's hub gets a soft halo, so the eye finds the anchors first.
+        if (info?.hub && lit) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
+          ctx.globalAlpha = lit ? 0.16 : 0.05;
+          ctx.fillStyle = ink;
+          ctx.fill();
+          ctx.globalAlpha = lit ? 1 : 0.18;
+        }
+
         ctx.beginPath();
-        ctx.arc(p.x, p.y, radiusOf(node.degree) * (isCurrent ? 1.35 : 1), 0, Math.PI * 2);
-        ctx.fillStyle = isCurrent || node.id === hovered ? palette.accent : palette.node;
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = isCurrent ? palette.accent : ink;
         ctx.fill();
+
+        // A thin paper-coloured ring separates nodes that overlap.
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = palette.surface;
+        ctx.stroke();
 
         if (showAllLabels || node.id === hovered || isCurrent) {
           const info = meta.get(node.id);
@@ -286,6 +363,10 @@ function hash(s: string): number {
     canvas.addEventListener(
       'wheel',
       (e) => {
+        // Plain wheel must scroll the page. Swallowing it traps the reader on a
+        // tall graph with no way past it. ⌘/Ctrl+wheel zooms — and a trackpad
+        // pinch arrives as ctrlKey, so pinch-to-zoom works untouched.
+        if (!e.ctrlKey && !e.metaKey) return;
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
         const mx = e.clientX - rect.left;
