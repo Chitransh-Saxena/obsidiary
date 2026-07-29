@@ -11,8 +11,12 @@
   --panel-label: 0.7rem;
 }
 
-html, body { height: 100%; }
-body { overflow-x: hidden; }
+/* Deliberately no `height: 100%` and no `overflow` on body.
+   Together those turn body into the scroll container instead of the document:
+   `window.scrollY` freezes at 0, and `scroll-behavior` / `scroll-padding-top`
+   set on <html> stop applying, so anchors land under the sticky topbar again.
+   Clamp the horizontal overflow on <html> and let the document scroll. */
+html { overflow-x: hidden; }
 
 /* An explicit `display` in author CSS beats the UA rule for [hidden], which
    would otherwise leave `hidden` grid and flex containers stubbornly visible. */
@@ -186,6 +190,31 @@ body { overflow-x: hidden; }
 .ob-folder[data-open="false"] > ul { display: none; }
 
 .ob-tree .ob-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- focus mode ----------
+   The document and its links, and nothing else. The rail is not hidden but
+   re-flowed beneath the note — the same move the narrow breakpoint makes — so
+   linked mentions survive while the graph and outline step aside. */
+html[data-focus="1"] .ob-sidebar { display: none; }
+html[data-focus="1"] .ob-layout { grid-template-columns: minmax(0, 1fr); }
+html[data-focus="1"] .ob-rail {
+  grid-column: 1;
+  position: static;
+  height: auto;
+  overflow: visible;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 0 clamp(20px, 5vw, 40px) 20vh;
+}
+html[data-focus="1"] .ob-rail .ob-graph-wrap,
+html[data-focus="1"] .ob-rail .ob-outline-panel { display: none; }
+html[data-focus="1"] .ob-main .obsidiary-note { padding-bottom: 2.5rem; }
+html[data-focus="1"] .ob-menubtn { display: none; }
+html[data-focus="1"] #ob-focus {
+  color: var(--accent);
+  border-color: var(--accent-subtle);
+  background: var(--accent-ghost);
+}
 
 /* ---------- credit ---------- */
 .ob-credit {

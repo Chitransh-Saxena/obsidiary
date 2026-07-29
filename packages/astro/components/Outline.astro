@@ -15,7 +15,7 @@ const headings = note.headings.filter((h) => h.depth <= 4 && !(h.depth === 1 && 
 
 {
   headings.length > 1 && (
-    <nav class="ob-panel" aria-label="On this page">
+    <nav class="ob-panel ob-outline-panel" aria-label="On this page">
       <p class="ob-panel-label">On this page</p>
       <ul class="ob-outline" id="ob-outline">
         {headings.map((h) => (

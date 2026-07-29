@@ -47,11 +47,15 @@ const summary = typeof description === 'string' ? description : site.description
       href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IM+Fell+English+SC&family=JetBrains+Mono:wght@400;500&display=swap"
     />
     <script is:inline>
-      // Runs before first paint: a dark-mode reader must never see a white flash.
+      // Runs before first paint: a dark-mode reader must never see a white flash,
+      // and a reader in focus mode must never see the panels appear then vanish.
       (() => {
         const stored = localStorage.getItem('obsidiary-theme');
         const prefers = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.dataset.theme = stored || prefers;
+        if (localStorage.getItem('obsidiary-focus') === '1') {
+          document.documentElement.dataset.focus = '1';
+        }
       })();
     </script>
   </head>
@@ -63,6 +67,14 @@ const summary = typeof description === 'string' ? description : site.description
       <button class="ob-iconbtn ob-menubtn" id="ob-menu" type="button" aria-label="Toggle sidebar" aria-expanded="false">☰</button>
       <a class="ob-brand" href="/">{site.title}</a>
       <div class="ob-spacer"></div>
+      <button
+        class="ob-iconbtn"
+        id="ob-focus"
+        type="button"
+        aria-pressed="false"
+        aria-label="Focus mode"
+        title="Focus mode (z) — hide the panels"
+      >◫</button>
       <a class="ob-iconbtn" href="/graph" title="Vault graph" aria-label="Vault graph">◎</a>
       <button class="ob-searchbtn" id="ob-search-trigger" type="button">
         <span aria-hidden="true">⌕</span>
@@ -153,8 +165,28 @@ const summary = typeof description === 'string' ? description : site.description
       document.addEventListener('keydown', (e) => {
         const tag = (e.target as HTMLElement | null)?.tagName ?? '';
         const typing = /^(input|textarea|select)$/i.test(tag);
-        if (e.key === 't' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) toggleTheme();
+        if (e.metaKey || e.ctrlKey || e.altKey || typing) return;
+        if (e.key === 't') toggleTheme();
+        else if (e.key === 'z') setFocus(!isFocus());
       });
+
+      // ---------- focus mode ----------
+      // Kept on the <html> element and in localStorage, so it survives
+      // navigation and is applied before first paint by the inline script above.
+      const focusBtn = document.getElementById('ob-focus');
+      const setFocus = (on: boolean): void => {
+        if (on) document.documentElement.dataset.focus = '1';
+        else delete document.documentElement.dataset.focus;
+        focusBtn?.setAttribute('aria-pressed', String(on));
+        try {
+          localStorage.setItem('obsidiary-focus', on ? '1' : '0');
+        } catch {
+          /* private browsing — focus mode just won't persist */
+        }
+      };
+      const isFocus = (): boolean => document.documentElement.dataset.focus === '1';
+      focusBtn?.setAttribute('aria-pressed', String(isFocus()));
+      focusBtn?.addEventListener('click', () => setFocus(!isFocus()));
 
       // ---------- sidebar drawer ----------
       const menu = document.getElementById('ob-menu');
