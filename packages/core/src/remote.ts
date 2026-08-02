@@ -84,9 +84,11 @@ export interface FetchVaultOptions {
 
 export interface RemoteVault {
   files: VaultFile[];
-  /** The branch or commit actually used. */
+  /** The branch or tag the build tracked — use this for edit/blob links. */
   resolvedRef: string;
-  /** Base URL for attachments. */
+  /** The exact commit read. Every file came from this one revision. */
+  commit: string;
+  /** Base URL for attachments, pinned to `commit`. */
   rawBase: string;
   /** True when GitHub truncated the tree, or `maxFiles` clipped it. */
   truncated: boolean;
@@ -189,18 +191,36 @@ export async function fetchVaultFiles(
   const { concurrency = 12, maxFiles = 3000 } = options;
   const doFetch = options.fetchImpl ?? fetch;
 
-  let resolvedRef = ref.ref;
-  if (!resolvedRef) {
+  let branch = ref.ref;
+  if (!branch) {
     const meta = await json<{ default_branch?: string }>(
       `https://api.github.com/repos/${ref.owner}/${ref.repo}`,
       options,
       'looking up the repository',
     );
-    resolvedRef = meta.default_branch ?? 'main';
+    branch = meta.default_branch ?? 'main';
   }
 
+  /**
+   * Resolve the branch to an immutable commit SHA, and read everything at that
+   * SHA rather than at the branch name.
+   *
+   * `raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>` is CDN-cached for
+   * several minutes, and the edges expire independently. Fetching a hundred
+   * files by branch name can therefore return a *mixture* of revisions — a
+   * build that is not any commit that ever existed. A SHA-pinned URL is
+   * content-addressed: always correct, cacheable forever, and it makes each
+   * build a snapshot of exactly one revision.
+   */
+  const head = await json<{ sha?: string }>(
+    `https://api.github.com/repos/${ref.owner}/${ref.repo}/commits/${encodeURIComponent(branch)}`,
+    options,
+    'resolving the branch to a commit',
+  );
+  const commit = head.sha ?? branch;
+
   const tree = await json<{ tree?: TreeEntry[]; truncated?: boolean }>(
-    `https://api.github.com/repos/${ref.owner}/${ref.repo}/git/trees/${encodeURIComponent(resolvedRef)}?recursive=1`,
+    `https://api.github.com/repos/${ref.owner}/${ref.repo}/git/trees/${encodeURIComponent(commit)}?recursive=1`,
     options,
     'listing the repository',
   );
@@ -232,7 +252,7 @@ export async function fetchVaultFiles(
     }
   }
 
-  const base = rawBase(ref, resolvedRef);
+  const base = rawBase(ref, commit);
   let loaded = 0;
 
   // A fixed pool of workers pulling from a shared cursor: bounded concurrency
@@ -261,5 +281,11 @@ export async function fetchVaultFiles(
   );
 
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  return { files, resolvedRef, rawBase: `${base}/${prefix}`.replace(/\/+$/, '/'), truncated };
+  return {
+    files,
+    resolvedRef: branch,
+    commit,
+    rawBase: `${base}/${prefix}`.replace(/\/+$/, '/'),
+    truncated,
+  };
 }

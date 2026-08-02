@@ -62,6 +62,10 @@ function fakeGitHub(tree: Array<{ path: string; type?: string }>, bodies: Record
         { status: 200 },
       );
     }
+    // Must precede the generic /repos/ case — it is a /repos/ URL too.
+    if (url.includes('/commits/')) {
+      return new Response(JSON.stringify({ sha: 'c0ffee1' }), { status: 200 });
+    }
     if (url.startsWith('https://api.github.com/repos/')) {
       return new Response(JSON.stringify({ default_branch: 'trunk' }), { status: 200 });
     }
@@ -128,8 +132,28 @@ describe('fetching a remote vault', () => {
     expect(index.notes['index.md']?.links[0]?.toPath).toBe('dev/Astro.md');
     expect(index.notes['boards/Map.canvas']?.kind).toBe('canvas');
     expect(index.assets['assets/photo.png']?.url).toBe(
-      'https://raw.githubusercontent.com/o/r/main/assets/photo.png',
+      'https://raw.githubusercontent.com/o/r/c0ffee1/assets/photo.png',
     );
+  });
+
+  it('pins every file read to one commit, not to the branch name', async () => {
+    const gh = fakeGitHub(tree, bodies);
+    const out = await fetchVaultFiles({ owner: 'o', repo: 'r', ref: 'main' }, { fetchImpl: gh.impl });
+
+    expect(out.commit).toBe('c0ffee1');
+    // The branch is still reported, because edit links have to point at it —
+    // you cannot edit a file at a detached commit.
+    expect(out.resolvedRef).toBe('main');
+
+    // Branch-name raw URLs are CDN-cached per edge, so reading a hundred files
+    // by branch can return a mixture of revisions. Everything must use the SHA.
+    const raw = gh.calls.filter((c) => c.startsWith('https://raw.githubusercontent.com/'));
+    expect(raw.length).toBeGreaterThan(0);
+    expect(raw.every((c) => c.startsWith('https://raw.githubusercontent.com/o/r/c0ffee1/'))).toBe(true);
+
+    // The file list is read at that commit too, so it cannot disagree with the
+    // file contents.
+    expect(gh.calls.some((c) => c.includes('/git/trees/c0ffee1'))).toBe(true);
   });
 
   it('treats a subdirectory as the vault root', async () => {
