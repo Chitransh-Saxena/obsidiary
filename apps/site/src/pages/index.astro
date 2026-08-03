@@ -818,7 +818,9 @@ const hosts = [
         /* Equal widths, side by side when the card allows and stacked when it
            does not. A filled button next to a narrower ghost one reads as
            primary-and-afterthought, which is not the choice being offered. */
-        grid-template-columns: repeat(auto-fit, minmax(184px, 1fr));
+        /* Wide enough that a label never wraps: at 184px two columns fit the
+           card and "Set up your own" broke across two lines in both. */
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         align-items: center;
         gap: 10px;
         padding: 12px 13px;

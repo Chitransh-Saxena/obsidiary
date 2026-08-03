@@ -72,47 +72,52 @@
    the ink is softened from cream to a warm off-white; and each surface step is
    wide enough to actually see, so the hierarchy does the work instead of the
    contrast. */
+/* Night, not a dimmed day.
+   The old dark theme was warm all the way through — brown-black ground, khaki
+   greys — which read as gold rather than as ink. Light stays parchment and
+   rubric; dark is now cool slate and azure, each internally coherent instead of
+   one being a washed-out copy of the other.
+   Text runs roughly 16 / 13 / 8 / 5 : 1 against the ground. */
 html[data-theme="dark"] {
-  --bg: #191510;
-  --bg-2: #1e1a14;
-  --surface: #231e17;
-  --surface-2: #2a241b;
-  --surface-3: #231e17;
-  --border: #372f24;
-  --border-strong: #4b4234;
-  --line: #2c261d;
+  --bg: #14161a;
+  --bg-2: #171a1f;
+  --surface: #1c2027;
+  --surface-2: #232830;
+  --surface-3: #1c2027;
+  --border: #2c333d;
+  --border-strong: #3e4854;
+  --line: #232932;
 
-  /* Lifted for legibility on the dark ground — the previous ramp bottomed out
-     around 3:1 and read as grey. Kept warm rather than neutral so it is still
-     ink on vellum; against --bg these run roughly 14 / 11 / 7 / 4.6 : 1. */
-  --text: #f2ebdd;
-  --text-2: #dad1bd;
-  --text-3: #b3a992;
-  --text-4: #8d8370;
+  --text: #f4f6f8;
+  --text-2: #dbe1e8;
+  --text-3: #aab4c0;
+  --text-4: #808b98;
 
-  --accent: #d4715a;
-  --accent-hover: #e58d76;
-  --accent-subtle: rgba(212, 113, 90, 0.2);
-  --accent-ghost: rgba(212, 113, 90, 0.1);
+  --accent: #6aa6ff;
+  --accent-hover: #8fbcff;
+  --accent-subtle: rgba(106, 166, 255, 0.22);
+  --accent-ghost: rgba(106, 166, 255, 0.12);
 
-  --green: #97b374;  --green-subtle: rgba(151, 179, 116, 0.12);
-  --amber: #d1a75a;  --amber-subtle: rgba(209, 167, 90, 0.12);
-  --red: #d4715a;    --red-subtle: rgba(212, 113, 90, 0.12);
-  --teal: #74b2ad;   --teal-subtle: rgba(116, 178, 173, 0.12);
-  --violet: #a294c4; --violet-subtle: rgba(162, 148, 196, 0.13);
+  --green: #6fcf97;  --green-subtle: rgba(111, 207, 151, 0.13);
+  --amber: #e3b341;  --amber-subtle: rgba(227, 179, 65, 0.13);
+  --red: #ff7d6e;    --red-subtle: rgba(255, 125, 110, 0.13);
+  --teal: #4fd1c5;   --teal-subtle: rgba(79, 209, 197, 0.13);
+  --violet: #b39dff; --violet-subtle: rgba(179, 157, 255, 0.14);
 
-  --cluster-1: #d4715a;
-  --cluster-2: #74a3c9;
-  --cluster-3: #97b374;
-  --cluster-4: #d1a75a;
-  --cluster-5: #a294c4;
-  --cluster-6: #74b2ad;
-  --cluster-7: #cf85a5;
-  --cluster-8: #b09a72;
+  /* Spread around the wheel so adjacent graph communities stay tellable apart
+     at 6px; amber and coral earn their place as hues, not as a cast. */
+  --cluster-1: #6aa6ff;
+  --cluster-2: #4fd1c5;
+  --cluster-3: #6fcf97;
+  --cluster-4: #e3b341;
+  --cluster-5: #b39dff;
+  --cluster-6: #ff7d6e;
+  --cluster-7: #f292c0;
+  --cluster-8: #94a9bf;
 
-  --shadow-xs: 0 1px 0 rgba(0, 0, 0, 0.3);
-  --shadow-sm: 1px 1px 0 rgba(0, 0, 0, 0.35);
-  --shadow-md: 2px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-xs: 0 1px 0 rgba(0, 0, 0, 0.45);
+  --shadow-sm: 1px 1px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 2px 3px 0 rgba(0, 0, 0, 0.55);
 }
 
 /* ---------- base ---------- */
