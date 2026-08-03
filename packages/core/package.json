@@ -1,6 +1,6 @@
 {
   "name": "obsidiary",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Isomorphic core for Obsidiary — parses an Obsidian vault into notes, links and a graph. Runs at build time in Node and at runtime in the browser.",
   "license": "MIT",
   "author": "Chitransh Saxena",

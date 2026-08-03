@@ -4,7 +4,8 @@ import '../styles/app.css';
 // Bundled rather than pulled from a CDN: no third-party request, no SRI to go
 // stale, and it works offline. katex ships as a transitive dep of the core.
 import 'katex/dist/katex.min.css';
-import { site } from 'virtual:obsidiary';
+import { index, site } from 'virtual:obsidiary';
+import { neighboursOf } from 'obsidiary';
 import type { Note, Renderer } from 'obsidiary';
 import Sidebar from './Sidebar.astro';
 import Outline from './Outline.astro';
@@ -28,6 +29,13 @@ const encodePath = (path: string): string =>
   path.split('/').map(encodeURIComponent).join('/');
 const description = note.frontmatter.description;
 const summary = typeof description === 'string' ? description : site.description;
+
+/**
+ * Where this note sits in its area's reading order, taken from the hub note's
+ * own list. `null` when nothing lists it — in which case no strip is drawn at
+ * all, rather than a "next" pointing somewhere arbitrary.
+ */
+const seq = neighboursOf(index, note.path);
 ---
 
 <html lang="en">
@@ -93,7 +101,54 @@ const summary = typeof description === 'string' ? description : site.description
             slot-only page like /graph pushes the content below the fold. */}
         {note.kind !== 'canvas' && html !== '' && (
           <div class="obsidiary-note">
+            {
+              seq && (
+                <nav class="ob-seq ob-seq--top" aria-label="Position in this series">
+                  {seq.prev ? (
+                    <a class="ob-seq-t" href={seq.prev.url} rel="prev">
+                      <i aria-hidden="true">&larr;</i> {seq.prev.title}
+                    </a>
+                  ) : (
+                    <span />
+                  )}
+                  {seq.hub && (
+                    <a class="ob-seq-up" href={seq.hub.url}>
+                      {seq.hub.title} · {seq.position} of {seq.total}
+                    </a>
+                  )}
+                  {seq.next ? (
+                    <a class="ob-seq-t ob-seq-t--next" href={seq.next.url} rel="next">
+                      {seq.next.title} <i aria-hidden="true">&rarr;</i>
+                    </a>
+                  ) : (
+                    <span />
+                  )}
+                </nav>
+              )
+            }
+
             <article set:html={html} />
+
+            {
+              seq && (seq.prev || seq.next) && (
+                <nav class="ob-seq-pair" aria-label="Previous and next">
+                  {seq.prev ? (
+                    <a class="ob-seq-card" href={seq.prev.url} rel="prev">
+                      <span class="ob-seq-k">&larr; Previous</span>
+                      <span class="ob-seq-n">{seq.prev.title}</span>
+                    </a>
+                  ) : (
+                    <span />
+                  )}
+                  {seq.next && (
+                    <a class="ob-seq-card ob-seq-card--next" href={seq.next.url} rel="next">
+                      <span class="ob-seq-k">Next &rarr;</span>
+                      <span class="ob-seq-n">{seq.next.title}</span>
+                    </a>
+                  )}
+                </nav>
+              )
+            }
             {
               (note.mtime || site.source) && (
                 <footer class="ob-colophon">

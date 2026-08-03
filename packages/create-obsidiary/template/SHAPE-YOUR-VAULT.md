@@ -72,7 +72,9 @@ Write the full tag list to tags.md as a registry — one line per tag, what it
 means, and which notes use it. This is the thing that stops tags multiplying.
 
 PASS 4 — HUB NOTES
-Give every folder an index.md:
+Two tiers, and usually only two.
+
+Give every TOP-LEVEL folder an index.md:
 
 ---
 title: <Human name of the area>
@@ -81,8 +83,18 @@ tags: [area, <area>]
 ---
 
 with a sentence on what lives there, then a list of [[Wikilinks]] to every note
-in that folder, each with half a line of description. This is the page people
-land on, so it should read like a contents page, not a file listing.
+in that area — including notes in its subfolders — each with half a line of
+description. It should read like a contents page, not a file listing.
+
+LIST THEM IN THE ORDER SOMEONE SHOULD READ THEM, not alphabetically. That order
+is load-bearing: it is what the site uses to build previous/next links between
+notes. Alphabetical is a filing order, not a reading one.
+
+Do NOT give every subfolder its own index.md. A subfolder of three notes that
+the area hub already lists is a page nobody needs and one more click to the
+thing they wanted. Add a sub-hub only when a subfolder has grown past roughly
+six notes and genuinely needs its own contents page — and when you do, the area
+hub should link to the sub-hub rather than to every note beneath it.
 
 PASS 5 — LINKS
 Where one note genuinely refers to another's subject, link it: [[Note name]].
@@ -94,8 +106,9 @@ Do not write "linked from" or maintain any backlink list by hand — backlinks a
 built automatically from the forward links.
 
 PASS 6 — ROOT
-Write index.md at the vault root: what this collection is, and a table of the
-folders, each with a [[link]] to its hub note.
+Write index.md at the vault root — the master index. What this collection is,
+and a table of the areas, each with a [[link]] to its hub note and a line on
+what it covers. It links to the area hubs, not to individual notes.
 
 PASS 7 — CHECK AND REPORT
 Report, and fix only the first of these:

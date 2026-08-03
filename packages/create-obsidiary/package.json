@@ -1,6 +1,6 @@
 {
   "name": "create-obsidiary",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Scaffold a site that publishes your Obsidian vault. `npm create obsidiary@latest`",
   "license": "MIT",
   "author": "Chitransh Saxena",

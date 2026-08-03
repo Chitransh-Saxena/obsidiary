@@ -21,6 +21,7 @@ export * from './search.js';
 export * from './canvas.js';
 export * from './graphsim.js';
 export * from './cluster.js';
+export * from './sequence.js';
 export * from './remote.js';
 export { remarkObsidian, type ObsidianOptions } from './markdown/remark-obsidian.js';
 export { remarkCallout } from './markdown/remark-callout.js';
