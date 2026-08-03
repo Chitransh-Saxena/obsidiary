@@ -82,10 +82,13 @@ html[data-theme="dark"] {
   --border-strong: #4b4234;
   --line: #2c261d;
 
-  --text: #e0d8c6;
-  --text-2: #c4bba6;
-  --text-3: #9a917c;
-  --text-4: #746c5a;
+  /* Lifted for legibility on the dark ground — the previous ramp bottomed out
+     around 3:1 and read as grey. Kept warm rather than neutral so it is still
+     ink on vellum; against --bg these run roughly 14 / 11 / 7 / 4.6 : 1. */
+  --text: #f2ebdd;
+  --text-2: #dad1bd;
+  --text-3: #b3a992;
+  --text-4: #8d8370;
 
   --accent: #d4715a;
   --accent-hover: #e58d76;

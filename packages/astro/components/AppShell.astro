@@ -223,20 +223,24 @@ const summary = typeof description === 'string' ? description : site.description
         const isAncestor = li.dataset.open === 'true';
         li.dataset.open = String(openFolders.has(path) || isAncestor);
 
-        li.querySelector<HTMLButtonElement>(':scope > .ob-folder-toggle')?.addEventListener(
-          'click',
-          () => {
-            const next = li.dataset.open !== 'true';
-            li.dataset.open = String(next);
-            li.querySelector(':scope > .ob-folder-toggle')?.setAttribute('aria-expanded', String(next));
-            next ? openFolders.add(path) : openFolders.delete(path);
-            try {
-              localStorage.setItem(TREE_KEY, JSON.stringify([...openFolders]));
-            } catch {
-              /* storage unavailable — collapse still works for this session */
-            }
-          },
+        // A folder with an index note wraps its caret and link in `.ob-folder-row`;
+        // one without has the caret directly on the `li`. Match both, or the
+        // caret silently stops toggling for every folder that has a hub note.
+        const toggle = li.querySelector<HTMLButtonElement>(
+          ':scope > .ob-folder-toggle, :scope > .ob-folder-row > .ob-folder-toggle',
         );
+
+        toggle?.addEventListener('click', () => {
+          const next = li.dataset.open !== 'true';
+          li.dataset.open = String(next);
+          toggle.setAttribute('aria-expanded', String(next));
+          next ? openFolders.add(path) : openFolders.delete(path);
+          try {
+            localStorage.setItem(TREE_KEY, JSON.stringify([...openFolders]));
+          } catch {
+            /* storage unavailable — collapse still works for this session */
+          }
+        });
       });
 
       // Keep the current note in view in a long tree — but only when it isn't

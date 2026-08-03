@@ -174,20 +174,65 @@ html { overflow-x: hidden; }
   font-weight: 500;
 }
 
-.ob-folder-row { display: flex; align-items: center; }
-.ob-folder-row .ob-folder-toggle { width: auto; flex: none; padding-right: 2px; }
-.ob-folder-row .ob-folder-link { flex: 1; }
+/* The row is the hover surface, so caret and name light up together rather
+   than as two separate rectangles that happen to sit side by side. */
+.ob-folder-row {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--t);
+}
+.ob-folder-row:hover { background: var(--surface-2); }
+.ob-tree .ob-folder-row:hover > .ob-folder-toggle,
+.ob-tree .ob-folder-row:hover > .ob-folder-link { background: none; color: var(--text); }
+
+/* A 9px caret with 2px of padding is a dart-throw. Give it a real target. */
+.ob-folder-row .ob-folder-toggle {
+  width: auto;
+  flex: none;
+  padding: 4px 4px 4px 7px;
+  border-radius: var(--radius-sm);
+}
+.ob-folder-row .ob-folder-link { flex: 1; min-width: 0; }
 
 .ob-folder-toggle { color: var(--text-3); font-weight: 500; }
 .ob-caret {
   flex: none;
-  width: 9px;
+  width: 11px;
   font-size: 0.62rem;
   color: var(--text-4);
-  transition: transform var(--t);
+  transition: transform 220ms cubic-bezier(0.34, 1.4, 0.64, 1), color var(--t);
 }
-.ob-folder[data-open="true"] > .ob-folder-toggle .ob-caret { transform: rotate(90deg); }
-.ob-folder[data-open="false"] > ul { display: none; }
+.ob-folder-row:hover .ob-caret { color: var(--accent); }
+.ob-folder-toggle:active .ob-caret { transform: scale(0.86) rotate(var(--caret-rot, 0deg)); }
+
+/* Both shapes of folder: caret-on-the-row, and caret directly on the li. */
+.ob-folder[data-open="true"] > .ob-folder-row > .ob-folder-toggle .ob-caret,
+.ob-folder[data-open="true"] > .ob-folder-toggle .ob-caret {
+  --caret-rot: 90deg;
+  transform: rotate(90deg);
+}
+
+/* Collapse by animating the row track rather than toggling `display`, which
+   cannot transition. `min-height: 0` is what lets the 0fr track actually
+   shrink; without it the grid refuses to go below the content height. */
+.ob-folder {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  transition: grid-template-rows 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ob-folder[data-open="false"] { grid-template-rows: auto 0fr; }
+.ob-folder > ul { overflow: hidden; min-height: 0; }
+/* Held visible until the collapse finishes, then taken out of the tab order. */
+.ob-folder[data-open="false"] > ul {
+  visibility: hidden;
+  transition: visibility 0s linear 220ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-folder,
+  .ob-caret { transition: none; }
+}
 
 .ob-tree .ob-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

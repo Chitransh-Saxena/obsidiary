@@ -10,7 +10,7 @@
     "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
-    "@obsidiary/astro": "0.1.0",
+    "@obsidiary/astro": "0.1.1",
     "astro": "^6.4.7",
     "obsidiary": "0.1.0"
   },
