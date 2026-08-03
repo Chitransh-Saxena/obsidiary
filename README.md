@@ -81,7 +81,7 @@ And the app around them:
 - `/search-index.json` and `/graph` injected automatically; the search index is
   fetched on first search, so readers who never search never download it
 
-199 tests cover the parts that are easy to get subtly wrong.
+210 tests cover the parts that are easy to get subtly wrong.
 
 ### A canvas is a note
 

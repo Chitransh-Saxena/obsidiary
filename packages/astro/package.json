@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "description": "Astro integration for Obsidiary — point it at a vault directory and get a site.",
   "license": "MIT",
+  "author": "Chitransh Saxena",
+  "homepage": "https://obsidiary.pulsar-projects.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chitransh-Saxena/obsidiary.git",
+    "directory": "packages/astro"
+  },
+  "bugs": "https://github.com/Chitransh-Saxena/obsidiary/issues",
+  "keywords": ["obsidian", "astro", "astro-integration", "digital-garden", "backlinks", "static-site"],
+  "engines": { "node": ">=22.12.0" },
+  "publishConfig": { "access": "public" },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

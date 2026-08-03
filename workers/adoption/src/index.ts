@@ -14,7 +14,7 @@ interface Env {
   NPM_PACKAGES?: string;
 }
 
-const DEFAULT_REPO = 'obsidiary/obsidiary';
+const DEFAULT_REPO = 'Chitransh-Saxena/obsidiary';
 const DEFAULT_PACKAGES = 'obsidiary,@obsidiary/astro,create-obsidiary';
 
 const CACHE_SECONDS = 3600;

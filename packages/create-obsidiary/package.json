@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "Scaffold a site that publishes your Obsidian vault. `npm create obsidiary@latest`",
   "license": "MIT",
+  "author": "Chitransh Saxena",
+  "homepage": "https://obsidiary.pulsar-projects.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chitransh-Saxena/obsidiary.git",
+    "directory": "packages/create-obsidiary"
+  },
+  "bugs": "https://github.com/Chitransh-Saxena/obsidiary/issues",
   "type": "module",
   "bin": {
     "create-obsidiary": "./index.js"

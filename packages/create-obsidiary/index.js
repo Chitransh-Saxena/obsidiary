@@ -140,7 +140,7 @@ async function main() {
     } else {
       console.log(`  Put your markdown in ${c.blue(`${dir}/vault/`)} — or open that folder as an Obsidian vault.`);
     }
-    console.log(c.dim('  Deploy guide: https://github.com/obsidiary/obsidiary#deploy-it-free'));
+    console.log(c.dim('  Deploy guide: https://obsidiary.pulsar-projects.org/docs/setup'));
     console.log('');
   } finally {
     rl?.close();

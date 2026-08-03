@@ -1,6 +1,6 @@
 # My notes site
 
-Built with [Obsidiary](https://github.com/obsidiary/obsidiary).
+Built with [Obsidiary](https://github.com/Chitransh-Saxena/obsidiary).
 
 ```bash
 npm install
