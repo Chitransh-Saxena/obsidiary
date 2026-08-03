@@ -267,6 +267,15 @@ const hosts = [
       <h2 class="cx-chaph">The setting-forth, in three motions</h2>
       <hr class="cx-rule cx-rule--double" />
 
+      <p class="cx-aside">
+        <b>Notes not in any order yet?</b> Most people's aren't — a folder of
+        markdown is not a vault. There is
+        <a href="/docs/shaping-a-vault-with-an-ai-agent">a prompt for that</a>:
+        point Claude&nbsp;Code, Codex or any agent that can read the folder at it,
+        and it returns folders, a tag registry, hub notes and real links —
+        without rewriting a word you wrote.
+      </p>
+
       <ol class="cx-recipe">
         <li>
           <h3>Scaffold</h3>
@@ -862,6 +871,15 @@ const hosts = [
         color: var(--cx-paper);
         background: var(--cx-rubric);
         outline-color: var(--cx-rubric);
+      }
+
+      .cx-aside {
+        margin: 0 0 1.8rem;
+        padding: 0.7rem 0 0.7rem 1.1rem;
+        border-left: 2px solid var(--cx-rubric);
+        font-size: 0.96rem;
+        line-height: 1.6;
+        color: var(--cx-ink-2, var(--cx-ink-3));
       }
 
       /* ══════════ explicit — the way out ══════════ */

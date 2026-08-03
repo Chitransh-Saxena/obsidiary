@@ -248,6 +248,40 @@ a { color: inherit; }
   overflow-x: auto;
   margin: 0 0 1.3em;
 }
+
+/* The wrapper is the positioning context, not the <pre> itself: the <pre>
+   scrolls horizontally, and anything positioned inside it slides away with the
+   content the moment a wide line is scrolled. */
+.obsidiary-note .ob-code { position: relative; margin: 0 0 1.3em; }
+.obsidiary-note .ob-code > pre { margin: 0; }
+.obsidiary-note .ob-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--t), color var(--t), border-color var(--t);
+}
+/* Revealed on hover, but always present once focused or used — a control that
+   only exists on hover is unreachable from a keyboard and invisible on touch. */
+.obsidiary-note .ob-code:hover .ob-copy,
+.obsidiary-note .ob-copy:focus-visible,
+.obsidiary-note .ob-copy[data-done] { opacity: 1; }
+.obsidiary-note .ob-copy:hover { color: var(--text); border-color: var(--border-strong); }
+.obsidiary-note .ob-copy[data-done] { color: var(--green); border-color: var(--green); }
+
+@media (hover: none) {
+  .obsidiary-note .ob-copy { opacity: 1; }
+}
 .obsidiary-note pre code {
   background: none;
   border: 0;

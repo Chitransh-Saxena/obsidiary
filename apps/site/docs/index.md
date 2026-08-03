@@ -12,6 +12,8 @@ something here looks broken, the product is broken.
 ## Start here
 
 - [[Setup]] — from nothing to a deployed site, step by step
+- [[Shaping a vault with an AI agent]] — you have a folder of files, not a
+  vault. A prompt that turns one into the other: folders, tags, links, hubs
 - [[Deploying]] — Cloudflare, Vercel, Netlify, GitHub Pages
 - [[Notes in their own repo]] — the interesting configuration
 - [[Publishing only some notes]] — read this before making a vault public

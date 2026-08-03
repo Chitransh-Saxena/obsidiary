@@ -140,6 +140,13 @@ async function main() {
     } else {
       console.log(`  Put your markdown in ${c.blue(`${dir}/vault/`)} — or open that folder as an Obsidian vault.`);
     }
+    console.log('');
+    console.log(
+      `  Notes not organised? ${c.blue('SHAPE-YOUR-VAULT.md')} has a prompt that gives a`,
+    );
+    console.log('  folder of loose markdown folders, tags and links — via Claude Code,');
+    console.log('  Codex, or any agent that can read the folder.');
+    console.log('');
     console.log(c.dim('  Deploy guide: https://obsidiary.pulsar-projects.org/docs/setup'));
     console.log('');
   } finally {

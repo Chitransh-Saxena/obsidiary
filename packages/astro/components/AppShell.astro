@@ -154,6 +154,49 @@ const summary = typeof description === 'string' ? description : site.description
     </style>
 
     <script>
+      // ---------- copy buttons on code blocks ----------
+      // Added because a vault is often the place a command or a long prompt
+      // lives, and selecting twenty lines of fenced text with a mouse is a
+      // small misery. Injected rather than rendered so the markdown pipeline
+      // stays a pure markdown-to-HTML transform.
+      document.querySelectorAll<HTMLPreElement>('.obsidiary-note pre').forEach((pre) => {
+        const code = pre.querySelector('code');
+        if (!code) return;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ob-copy';
+        button.textContent = 'copy';
+        button.setAttribute('aria-label', 'Copy code to clipboard');
+
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        button.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(code.textContent ?? '');
+            button.textContent = 'copied';
+            button.dataset.done = 'true';
+          } catch {
+            // Clipboard is refused on insecure origins; say something true.
+            button.textContent = 'select it';
+          }
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            button.textContent = 'copy';
+            delete button.dataset.done;
+          }, 1600);
+        });
+
+        // Wrap rather than append. A button appended inside <pre> sits after
+        // the code in normal flow — it lands at the *bottom* of a long block —
+        // and anything positioned inside the horizontally scrolling <pre>
+        // slides away with the content. The wrapper is the anchor instead.
+        const wrap = document.createElement('div');
+        wrap.className = 'ob-code';
+        pre.parentNode?.insertBefore(wrap, pre);
+        wrap.appendChild(pre);
+        wrap.appendChild(button);
+      });
+
       // ---------- theme ----------
       const toggleTheme = (): void => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
