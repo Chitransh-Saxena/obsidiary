@@ -105,20 +105,25 @@ const hosts = [
 
   <body class="cx">
     <!-- ─────────── running head ─────────── -->
-    <header class="cx-head">
-      <span class="cx-head-l">Obsidiary</span>
-      <span class="cx-head-c">a device for the publishing of private libraries</span>
-      <nav class="cx-head-r">
-        <a href="/docs">Docs</a>
-        <span class="cx-sep">·</span>
-        <a href="/live">Live</a>
-        <span class="cx-sep">·</span>
-        <a href="https://notes.pulsar-projects.org">A vault</a>
-        <span class="cx-sep">·</span>
-        <a href={REPO}>Source</a>
-        <button id="cx-theme" type="button" aria-label="Toggle theme">☾</button>
-      </nav>
-    </header>
+    <!-- Sticky, because a running head that scrolls away is the one thing a
+         codex actually does better than a website: it repeats on every leaf. -->
+    <div class="cx-headbar">
+      <header class="cx-head">
+        <a class="cx-head-l" href="/">Obsidiary</a>
+        <span class="cx-head-c">a device for the publishing of private libraries</span>
+        <nav class="cx-head-r">
+          <a href="/docs">Guide</a>
+          <span class="cx-sep">·</span>
+          <a href="https://notes.pulsar-projects.org">My notes</a>
+          <span class="cx-sep cx-opt">·</span>
+          <a class="cx-opt" href="/live">Try any vault</a>
+          <span class="cx-sep cx-opt">·</span>
+          <a class="cx-opt" href={REPO}>Source</a>
+          <a class="cx-head-cta" href="/docs/setup">Set up your own &rarr;</a>
+          <button id="cx-theme" type="button" aria-label="Toggle theme">☾</button>
+        </nav>
+      </header>
+    </div>
 
     <!-- ─────────── title page ─────────── -->
     <section class="cx-title">
@@ -149,18 +154,24 @@ const hosts = [
             <code id="cx-cmd">npm create obsidiary@latest</code>
             <button id="cx-copy" type="button" aria-label="Copy command">copy</button>
           </div>
+          <!-- The two things a reader actually wants are the two buttons:
+               make your own, or go look at a real one. The demo is third. -->
           <div class="cx-card-foot">
-            <a class="cx-go" href="/live">
-              <span>Read any vault, unbound</span>
+            <a class="cx-go" href="/docs/setup">
+              <span>Set up your own</span>
               <i class="cx-go-arrow" aria-hidden="true">&rarr;</i>
             </a>
-            <a class="cx-quiet" href="/docs">The setter's guide</a>
+            <a class="cx-go cx-go--ghost" href="https://notes.pulsar-projects.org">
+              <span>See a real vault</span>
+              <i class="cx-go-arrow" aria-hidden="true">&rarr;</i>
+            </a>
           </div>
         </div>
 
         <p class="cx-seen">
-          <span class="cx-seen-t">Seen in the wild —</span>
-          <a href="https://notes.pulsar-projects.org">my own notes</a> run on this,
+          <span class="cx-seen-t">Or read one unbound —</span>
+          <a href="/live">render any public vault in your browser</a>, nothing to install.
+          The vault above is <a href="https://notes.pulsar-projects.org">my own notes</a>,
           set from <a href="https://github.com/Chitransh-Saxena/notes">a repository holding
           nothing but markdown</a>.
         </p>
@@ -336,6 +347,41 @@ const hosts = [
       </ol>
     </section>
 
+    <!-- ─────────── explicit — the way out ─────────── -->
+    <!-- "Explicit" is the closing formula of a manuscript, the counterpart to
+         "incipit". It is also, here, literally what the page was missing: a
+         reader who has read the whole argument had nowhere to go but back. -->
+    <section class="cx-finis">
+      <hr class="cx-rule cx-rule--double" />
+      <p class="cx-chapno cx-chapno--rub">Explicit</p>
+      <h2 class="cx-chaph">Two ways onward</h2>
+
+      <div class="cx-finis-pair">
+        <a class="cx-leaf" href="/docs/setup">
+          <span class="cx-leaf-k">Set up your own</span>
+          <span class="cx-leaf-d">
+            The guide, end to end — scaffold it, point it at your notes, and set it forth
+            on a press that asks nothing. About ten minutes.
+          </span>
+          <span class="cx-leaf-go">Begin <i aria-hidden="true">&rarr;</i></span>
+        </a>
+
+        <a class="cx-leaf" href="https://notes.pulsar-projects.org">
+          <span class="cx-leaf-k">Read a real one</span>
+          <span class="cx-leaf-d">
+            My own library — drones, photography, guitar, reading — set from a repository
+            holding nothing but markdown. This is what yours would look like.
+          </span>
+          <span class="cx-leaf-go">Enter <i aria-hidden="true">&rarr;</i></span>
+        </a>
+      </div>
+
+      <p class="cx-finis-alt">
+        Not ready to install? <a href="/live">Render any public vault in the browser</a>,
+        or <a href={REPO}>read the source</a>.
+      </p>
+    </section>
+
     <!-- ─────────── colophon ─────────── -->
     <footer class="cx-colophon">
       <hr class="cx-rule cx-rule--double" />
@@ -358,6 +404,15 @@ const hosts = [
         Walpergen for John Fell in the seventeenth century. Composed in TypeScript,
         impressed at Cloudflare's edge.
       </p>
+
+      <p class="cx-made">
+        <span class="cx-made-heart" aria-hidden="true">❤</span>
+        Made with love, and with
+        <a href="https://claude.com/claude-code">Claude&nbsp;Code</a> — which argued
+        the design, wrote a great deal of the engine, and found the bugs that only
+        show themselves at three in the morning.
+      </p>
+
       <nav class="cx-colo-links">
         <a href="/docs">Documentation</a>
         <a href="/live">Live view</a>
@@ -573,24 +628,61 @@ const hosts = [
       }
 
       /* ══════════ running head ══════════ */
+      .cx-headbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: color-mix(in srgb, var(--cx-paper) 88%, transparent);
+        backdrop-filter: blur(9px) saturate(120%);
+        -webkit-backdrop-filter: blur(9px) saturate(120%);
+        border-bottom: 1px solid var(--cx-rule);
+      }
       .cx-head {
         display: grid;
-        grid-template-columns: 1fr auto 1fr;
+        /* The nav takes exactly the width it needs; the tagline yields. A 1fr
+           nav column wraps "my notes" onto three lines at ordinary widths. */
+        grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: baseline;
         gap: 18px;
         max-width: var(--cx-page);
         margin: 0 auto;
-        padding: 22px clamp(20px, 5vw, 34px) 12px;
-        border-bottom: 1px solid var(--cx-rule);
+        padding: 14px clamp(20px, 5vw, 34px) 13px;
         font-family: var(--cx-fell);
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         letter-spacing: 0.07em;
         text-transform: lowercase;
       }
+      .cx a.cx-head-l { color: var(--cx-ink); text-decoration: none; }
+      .cx a.cx-head-l:hover { color: var(--cx-rubric); }
+
+      /* The one action the running head insists on. Bordered so it reads as a
+         thing you press, not a fifth word in a list of links. */
+      .cx a.cx-head-cta {
+        margin-left: 10px;
+        padding: 5px 11px;
+        color: var(--cx-rubric);
+        border: 1px solid color-mix(in srgb, var(--cx-rubric) 45%, transparent);
+        border-radius: 2px;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+      .cx a.cx-head-cta:hover {
+        color: var(--cx-paper);
+        background: var(--cx-rubric);
+        border-color: var(--cx-rubric);
+      }
       .cx-head-l { color: var(--cx-ink); }
-      .cx-head-c { color: var(--cx-ink-4); font-style: italic; text-align: center; }
+      .cx-head-c {
+        color: var(--cx-ink-4);
+        font-style: italic;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .cx-head-r { justify-self: end; display: flex; align-items: baseline; gap: 8px; }
-      .cx-head-r a { color: var(--cx-ink-3); }
+      .cx-head-r a { color: var(--cx-ink-3); white-space: nowrap; }
       .cx-head-r a:hover { color: var(--cx-rubric); }
       .cx-sep { color: var(--cx-rule); }
       .cx-head-r button {
@@ -713,10 +805,13 @@ const hosts = [
       }
       .cx-card-body button:hover { color: var(--cx-rubric); border-color: var(--cx-rubric); }
       .cx-card-foot {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        /* Equal widths, side by side when the card allows and stacked when it
+           does not. A filled button next to a narrower ghost one reads as
+           primary-and-afterthought, which is not the choice being offered. */
+        grid-template-columns: repeat(auto-fit, minmax(184px, 1fr));
         align-items: center;
-        gap: 16px;
+        gap: 10px;
         padding: 12px 13px;
         border-top: 1px solid var(--cx-rule);
         font-size: 0.86rem;
@@ -729,6 +824,7 @@ const hosts = [
       .cx a.cx-go {
         display: inline-flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
         margin: 4px;                    /* room for the offset rule */
         font-family: var(--cx-fell);
@@ -754,6 +850,78 @@ const hosts = [
       .cx a.cx-go:active { transform: translateY(1px); outline-offset: 2px; }
       .cx-go-arrow { font-style: normal; transition: transform 170ms ease; }
       .cx a.cx-go:hover .cx-go-arrow { transform: translateX(4px); }
+
+      /* The second action: equal weight in size, quieter in colour, so the
+         pair reads as a choice rather than a button and an afterthought. */
+      .cx a.cx-go--ghost {
+        color: var(--cx-rubric);
+        background: transparent;
+        outline-color: color-mix(in srgb, var(--cx-rubric) 38%, transparent);
+      }
+      .cx a.cx-go--ghost:hover {
+        color: var(--cx-paper);
+        background: var(--cx-rubric);
+        outline-color: var(--cx-rubric);
+      }
+
+      /* ══════════ explicit — the way out ══════════ */
+      .cx-finis {
+        max-width: var(--cx-page);
+        margin: 0 auto;
+        padding: 0 clamp(20px, 5vw, 34px);
+      }
+      .cx-finis-pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 1.6rem;
+      }
+      .cx a.cx-leaf {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 22px 24px 20px;
+        color: inherit;
+        text-decoration: none;
+        background: color-mix(in srgb, var(--cx-paper) 55%, transparent);
+        border: 1px solid var(--cx-rule);
+        border-radius: 2px;
+        transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      }
+      .cx a.cx-leaf:hover {
+        border-color: var(--cx-rubric);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 22px -14px var(--cx-rubric);
+      }
+      .cx-leaf-k {
+        font-family: var(--cx-fell);
+        font-size: 1.15rem;
+        letter-spacing: 0.03em;
+        color: var(--cx-ink);
+      }
+      .cx-leaf-d {
+        font-size: 0.94rem;
+        line-height: 1.55;
+        color: var(--cx-ink-3);
+        font-variation-settings: "opsz" 14;
+      }
+      .cx-leaf-go {
+        margin-top: auto;
+        padding-top: 0.4rem;
+        font-family: var(--cx-fell);
+        font-size: 0.76rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--cx-rubric);
+      }
+      .cx a.cx-leaf:hover .cx-leaf-go i { display: inline-block; transform: translateX(4px); }
+      .cx-leaf-go i { transition: transform 180ms ease; font-style: normal; }
+      .cx-finis-alt {
+        margin: 1.4rem 0 0;
+        font-size: 0.9rem;
+        font-style: italic;
+        color: var(--cx-ink-3);
+      }
 
       .cx-quiet { font-style: italic; color: var(--cx-ink-3); }
       .cx-quiet:hover { color: var(--cx-rubric); }
@@ -1066,6 +1234,15 @@ const hosts = [
         color: var(--cx-rubric);
       }
 
+      .cx-made {
+        margin: 1.1rem auto 0;
+        max-width: 34rem;
+        font-size: 0.9rem;
+        font-style: italic;
+        line-height: 1.6;
+        color: var(--cx-ink-3);
+      }
+      .cx-made-heart { color: var(--cx-rubric); font-style: normal; margin-right: 0.35em; }
       .cx-colo-body {
         max-width: 34rem;
         margin: 0 auto;
@@ -1102,10 +1279,19 @@ const hosts = [
         .cx-cols { columns: 1; }
         .cx-head { grid-template-columns: 1fr auto; }
         .cx-head-c { display: none; }
+        .cx-finis-pair { grid-template-columns: minmax(0, 1fr); }
+      }
+      /* Below this the running head cannot hold five items and a button, so it
+         keeps the two the page exists for: a real vault, and setting up your own. */
+      @media (max-width: 760px) {
+        .cx-opt { display: none; }
       }
       @media (max-width: 520px) {
         .cx { font-size: 18px; }
         .cx-head-r { gap: 6px; }
+        .cx a.cx-head-cta { margin-left: 4px; padding: 5px 8px; }
+        .cx-card-foot { gap: 10px; }
+        .cx a.cx-go { width: 100%; justify-content: space-between; }
       }
     </style>
   </body>

@@ -9,9 +9,14 @@ merge conflict.
 public vault in your browser ·
 **[A vault it publishes](https://notes.pulsar-projects.org)**
 
-> **Status: working, not yet on npm.** Everything below runs. The packages have
-> not been published to the registry yet, so `npm create obsidiary@latest` will
-> not resolve until they are — clone the repo to try it today.
+[![obsidiary](https://img.shields.io/npm/v/obsidiary?label=obsidiary)](https://www.npmjs.com/package/obsidiary)
+[![@obsidiary/astro](https://img.shields.io/npm/v/@obsidiary/astro?label=%40obsidiary%2Fastro)](https://www.npmjs.com/package/@obsidiary/astro)
+[![create-obsidiary](https://img.shields.io/npm/v/create-obsidiary?label=create-obsidiary)](https://www.npmjs.com/package/create-obsidiary)
+[![license](https://img.shields.io/npm/l/obsidiary)](./LICENSE)
+
+```bash
+npm create obsidiary@latest my-notes
+```
 
 ## Why another one
 
@@ -42,11 +47,17 @@ publishing tool.
 
 ## Packages
 
-| Package | What it is |
-| --- | --- |
-| `obsidiary` | The isomorphic core: vault model, link resolution, markdown pipeline. No `node:*` imports — the static build and the in-browser live mode run this exact code. |
-| `@obsidiary/astro` | Astro integration. Point it at a directory, get a site. |
-| `apps/demo` | The demo site and its vault. |
+Each published package maps to one folder in this repo — npm's "Repository"
+link on every page points straight back here:
+
+| Package | Source | What it is |
+| --- | --- | --- |
+| [`obsidiary`](https://www.npmjs.com/package/obsidiary) | [`packages/core`](./packages/core) | The isomorphic core: vault model, link resolution, markdown pipeline. No `node:*` imports — the static build and the in-browser live mode run this exact code. |
+| [`@obsidiary/astro`](https://www.npmjs.com/package/@obsidiary/astro) | [`packages/astro`](./packages/astro) | Astro integration. Point it at a directory, get a site. |
+| [`create-obsidiary`](https://www.npmjs.com/package/create-obsidiary) | [`packages/create-obsidiary`](./packages/create-obsidiary) | The scaffolder behind `npm create obsidiary@latest`. Zero dependencies. |
+| — | [`apps/demo`](./apps/demo) | The demo site and its vault. |
+| — | [`apps/site`](./apps/site) | This project's own landing page and docs. |
+| — | [`apps/notes`](./apps/notes) | A real vault, published: [notes.pulsar-projects.org](https://notes.pulsar-projects.org) |
 
 ## What works today
 
@@ -128,8 +139,8 @@ photographs doesn't bloat your deploy.
 
 ## Next
 
-- Publish `obsidiary`, `@obsidiary/astro` and `create-obsidiary` to npm, so
-  `npm create obsidiary@latest` resolves
+- Publish from CI with [npm provenance](https://docs.npmjs.com/generating-provenance-statements),
+  so every release is cryptographically attested to the commit that built it
 - Self-host the fonts instead of loading them from Google Fonts
 - Mermaid rendering; a tags browser; RSS
 
