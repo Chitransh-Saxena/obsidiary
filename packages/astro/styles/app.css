@@ -684,11 +684,20 @@ html[data-focus="1"] #ob-focus {
 }
 .ob-graph-wrap.is-bare .ob-graph { height: 100%; }
 
+/* The graph page has no outline and no backlinks — its note is synthetic — so
+   the rail was reserving 248px of nothing beside the one thing anybody came to
+   look at. Drop the column here and let the board have the width. */
+.ob-layout:has(.ob-graph-page) { grid-template-columns: var(--sidebar-w) minmax(0, 1fr); }
+.ob-layout:has(.ob-graph-page) .ob-rail { display: none; }
+
 .ob-graph-page {
-  max-width: 1100px;
+  max-width: none;
   margin: 0 auto;
   padding: clamp(24px, 4vw, 48px) clamp(20px, 5vw, 40px) 60px;
 }
+/* The prose above the board still wants a measure; the board does not. */
+.ob-graph-page h1,
+.ob-graph-page .ob-graph-lede { max-width: 46rem; }
 .ob-graph-page h1 {
   font-family: var(--font-display);
   font-size: 1.9rem;
