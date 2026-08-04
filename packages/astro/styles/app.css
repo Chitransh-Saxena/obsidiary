@@ -104,6 +104,10 @@ html { overflow-x: hidden; }
   max-width: 1560px;
   margin: 0 auto;
 }
+/* Grid and flex children default to min-width:auto, which refuses to shrink
+   below their content — one over-wide element then pushes the whole page
+   sideways instead of scrolling inside its own box. */
+.ob-main, .ob-rail, .ob-graph, .ob-panel { min-width: 0; }
 
 .ob-sidebar,
 .ob-rail {
@@ -315,6 +319,14 @@ html { overflow-x: hidden; }
    linked mentions survive while the graph and outline step aside. */
 html[data-focus="1"] .ob-sidebar { display: none; }
 html[data-focus="1"] .ob-layout { grid-template-columns: minmax(0, 1fr); }
+/* Focus mode gives back 512px of sidebar and rail, so spend it: a little more
+   prose measure, and a lot more room for the blocks that were being clipped.
+   Hiding the panels without widening anything was the worst of both — the same
+   squeezed column, now marooned in the middle of an empty screen. */
+html[data-focus="1"] {
+  --measure: 38rem;
+  --wide: 66rem;
+}
 html[data-focus="1"] .ob-rail {
   grid-column: 1;
   position: static;
@@ -539,6 +551,12 @@ html[data-focus="1"] #ob-focus {
 .ob-graph canvas {
   width: 100%;
   height: 100%;
+  /* A canvas falls back to its attribute box — 300×150, or 600×300 once the
+     script has doubled it for DPR — whenever that script has not measured it
+     yet. On a phone that default is wider than the screen and the whole page
+     gains a horizontal scrollbar. Clamp it here so the layout never depends on
+     JavaScript having run. */
+  max-width: 100%;
   display: block;
   cursor: grab;
   touch-action: none;

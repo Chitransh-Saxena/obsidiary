@@ -1,6 +1,6 @@
 {
   "name": "@obsidiary/astro",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Astro integration for Obsidiary — point it at a vault directory and get a site.",
   "license": "MIT",
   "author": "Chitransh Saxena",

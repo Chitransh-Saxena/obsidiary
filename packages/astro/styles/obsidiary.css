@@ -53,6 +53,11 @@
   --t: 150ms var(--ease-soft);
 
   --measure: 34rem;
+  /* Prose wants ~65 characters. Code does not — it wants however many columns
+     the author wrote, and an 80-column block clipped to 55 is not a measure
+     decision, it is a broken block. Wide things break out of the measure into
+     the slack the layout already has either side of it. */
+  --wide: 54rem;
 
   /* Cluster inks for the graph. Chosen to read as pigments on parchment —
      distinguishable from each other, and none of them louder than the rubric. */
@@ -182,6 +187,20 @@ a { color: inherit; }
   max-width: var(--measure);
   margin: 0 auto;
   padding: clamp(28px, 6vw, 72px) clamp(20px, 5vw, 40px) 25vh;
+}
+
+/* Break out of the measure, centred on it. Negative inline margins rather than
+   a transform, so nothing inside gets a new containing block — the copy button
+   is absolutely positioned in there.
+   `100vw` is the right clamp on small screens, where the sidebar is a drawer
+   and the note really does span the viewport; on desktop `--wide` is always the
+   smaller of the two, so the vw term never applies. */
+.obsidiary-note article > pre,
+.obsidiary-note article > .ob-code,
+.obsidiary-note article > table,
+.obsidiary-note article > .obsidiary-canvas {
+  --breakout: min(var(--wide), calc(100vw - 3rem));
+  margin-inline: calc((100% - var(--breakout)) / 2);
 }
 
 /* Titles and section heads take the Fell small caps; anything deeper stays in
