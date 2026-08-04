@@ -67,6 +67,35 @@ describe('reading order from hub notes', () => {
     expect(seqs['music']?.items).not.toContain('photography/index.md');
   });
 
+  it('ignores prose mentions — only the list is the contents page', () => {
+    const seqs = buildSequences(vault());
+    // "Back to [[index|home]], and see [[Photos]]." is prose, and so is any
+    // later sentence about a note that is already listed.
+    expect(seqs['music']?.items).toHaveLength(3);
+  });
+
+  it('counts links in a table row, which is how a root index is often written', () => {
+    const index = buildVault([
+      {
+        path: 'index.md',
+        content: [
+          '# Home',
+          '',
+          '| Folder | Area |',
+          '| --- | --- |',
+          '| `a/` | [[Alpha]] |',
+          '| `b/` | [[Beta]] |',
+          '',
+          'Some prose about [[Gamma]] that is not a contents entry.',
+        ].join('\n'),
+      },
+      { path: 'a/index.md', content: '---\naliases: [Alpha]\n---\n\n# Alpha' },
+      { path: 'b/index.md', content: '---\naliases: [Beta]\n---\n\n# Beta' },
+      { path: 'c/index.md', content: '---\naliases: [Gamma]\n---\n\n# Gamma' },
+    ]);
+    expect(buildSequences(index)['']?.items).toEqual(['a/index.md', 'b/index.md']);
+  });
+
   it('ignores embeds — transcluding a note is not listing it', () => {
     const seqs = buildSequences(vault());
     // `![[The fretboard]]` appears after the list; it must not duplicate.
@@ -105,8 +134,11 @@ describe('reading order from hub notes', () => {
 
   it('prefers the deepest hub when two list the same note', () => {
     const index = buildVault([
-      { path: 'index.md', content: '# Home\n\n[[Deep]] and [[Area]]' },
-      { path: 'area/index.md', content: '---\ntitle: Area\n---\n\n[[Other]]\n[[Deep]]' },
+      { path: 'index.md', content: '# Home\n\n- [[Deep]]\n- [[Area]]\n' },
+      {
+        path: 'area/index.md',
+        content: '---\ntitle: Area\naliases: [Area]\n---\n\n- [[Other]]\n- [[Deep]]\n',
+      },
       { path: 'area/Deep.md', content: '# Deep' },
       { path: 'area/Other.md', content: '# Other' },
     ]);

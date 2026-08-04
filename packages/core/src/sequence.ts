@@ -35,6 +35,27 @@ export interface Neighbours {
   total: number;
 }
 
+/**
+ * A contents entry, as opposed to a passing mention.
+ *
+ * A hub note lists its notes and then usually talks about a few of them in
+ * prose underneath. Both are links, but only the list is the contents page — so
+ * a sentence like "…which is why [[The capo]] works at all" must not shove that
+ * note into the middle of the reading order.
+ *
+ * The test is where the link sits: on a list item, or in a table row. Those are
+ * the two ways people actually write a contents page, and everything else is
+ * prose.
+ */
+function isContentsEntry(body: string, offset: number | undefined): boolean {
+  // Without a position there is nothing to judge, so keep the link rather than
+  // silently emptying the sequence.
+  if (offset === undefined) return true;
+  const lineStart = body.lastIndexOf('\n', offset - 1) + 1;
+  const before = body.slice(lineStart, offset);
+  return /^\s*(?:[-*+]|\d+[.)])\s/.test(before) || /^\s*\|/.test(before);
+}
+
 /** A hub is a folder's `index` note: `index.md`, `fpv/index.md`, … */
 export function isHubPath(path: string): boolean {
   return basename(stripExt(path)).toLowerCase() === 'index';
@@ -71,6 +92,7 @@ export function buildSequences(index: VaultIndex): Record<string, Sequence> {
       const to = link.toPath;
       if (!to || link.embed || link.kind !== 'note') continue;
       if (seen.has(to) || !within(folder, to)) continue;
+      if (!isContentsEntry(note.body, link.offset)) continue;
       seen.add(to);
       items.push(to);
     }

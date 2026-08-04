@@ -9,8 +9,8 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@obsidiary/astro": "0.1.5",
+    "@obsidiary/astro": "0.1.6",
     "astro": "^6.4.7",
-    "obsidiary": "0.1.1"
+    "obsidiary": "0.1.2"
   }
 }

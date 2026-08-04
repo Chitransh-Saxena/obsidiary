@@ -1,6 +1,6 @@
 {
   "name": "@obsidiary/astro",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Astro integration for Obsidiary — point it at a vault directory and get a site.",
   "license": "MIT",
   "author": "Chitransh Saxena",
@@ -32,7 +32,7 @@
     "build": "tsc --build"
   },
   "dependencies": {
-    "obsidiary": "0.1.1"
+    "obsidiary": "0.1.2"
   },
   "peerDependencies": {
     "astro": "^5.0.0 || ^6.0.0"
