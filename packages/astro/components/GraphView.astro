@@ -29,6 +29,7 @@ const sub = mode === 'global' ? fullGraph(index, maxNodes) : neighborhood(index,
 const clusters = detectCommunities(sub.nodes, sub.links);
 
 const payload = {
+  mode,
   current: currentPath,
   nodes: sub.nodes.map((path) => ({
     id: path,
@@ -79,9 +80,47 @@ function hash(s: string): number {
         <canvas id={id} data-graph={id}></canvas>
         <script type="application/json" data-graph-for={id} set:html={JSON.stringify(payload)} />
         <div class="ob-graph-tools">
+          <button class="ob-graph-btn" type="button" data-settings-for={id} title="Graph settings" aria-expanded="false">Settings</button>
           <button class="ob-graph-btn" type="button" data-reset-for={id} title="Reset view">Reset</button>
           {!bare && <a class="ob-graph-btn" href="/graph" title="The whole vault">Full view ⤢</a>}
         </div>
+
+        {/* Obsidian-style knobs. Forces rebuild the layout; the rest only
+            repaint. Everything persists, per graph kind, in localStorage. */}
+        <form class="ob-graph-settings" data-settings-panel={id} hidden>
+          {mode === 'local' && (
+            <label>
+              <span>Depth <b data-out="depth">1</b></span>
+              <input type="range" name="depth" min="1" max="4" step="1" value="1" />
+            </label>
+          )}
+          <label>
+            <span>Link distance <b data-out="linkDistance">48</b></span>
+            <input type="range" name="linkDistance" min="20" max="160" step="2" value="48" />
+          </label>
+          <label>
+            <span>Repulsion <b data-out="repulsion">900</b></span>
+            <input type="range" name="repulsion" min="200" max="3200" step="50" value="900" />
+          </label>
+          <label>
+            <span>Centre pull <b data-out="centerStrength">14</b></span>
+            <input type="range" name="centerStrength" min="0" max="60" step="1" value="14" />
+          </label>
+          <label>
+            <span>Node size <b data-out="nodeScale">100</b>%</span>
+            <input type="range" name="nodeScale" min="50" max="220" step="5" value="100" />
+          </label>
+          <label class="ob-graph-set-row">
+            <span>Labels</span>
+            <select name="labels">
+              <option value="auto">Auto</option>
+              <option value="all">Always</option>
+              <option value="hover">On hover</option>
+              <option value="none">None</option>
+            </select>
+          </label>
+          <button type="button" class="ob-graph-btn" data-defaults-for={id}>Restore defaults</button>
+        </form>
       </div>
 
       {
@@ -108,7 +147,7 @@ function hash(s: string): number {
 }
 
 <script>
-  import { boundsOf, createSimulation } from 'obsidiary';
+  import { boundsOf, createSimulation, detectCommunities, neighborhood } from 'obsidiary';
 
   interface GraphNode {
     id: string;
@@ -119,6 +158,7 @@ function hash(s: string): number {
     hub: boolean;
   }
   interface Payload {
+    mode: 'local' | 'global';
     current: string;
     nodes: GraphNode[];
     links: Array<{ source: string; target: string }>;
@@ -137,19 +177,53 @@ function hash(s: string): number {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const sim = createSimulation(
-      data.nodes.map((n) => n.id),
-      data.links,
-      // A small local graph wants to sit tight; a big one needs room to breathe.
-      data.nodes.length > 80 ? { linkDistance: 58, repulsion: 1400 } : {},
-    );
-    // Pin the note being read at the centre so the local graph is legible.
-    const focus = sim.nodes.find((n) => n.id === data.current);
-    if (focus) {
-      focus.x = 0;
-      focus.y = 0;
-      focus.fixed = true;
+    // ---------- settings ----------
+    // A small local graph wants to sit tight; a big one needs room to breathe,
+    // so the two kinds get different starting points and remember separately.
+    const DEFAULTS = {
+      depth: 1,
+      linkDistance: data.nodes.length > 80 ? 58 : 48,
+      repulsion: data.nodes.length > 80 ? 1400 : 900,
+      centerStrength: 14, // thousandths — the simulation wants 0.014
+      nodeScale: 100, // percent
+      labels: 'auto' as 'auto' | 'all' | 'hover' | 'none',
+    };
+    const SKEY = `obsidiary-graph-${data.mode}`;
+    let settings = { ...DEFAULTS };
+    try {
+      Object.assign(settings, JSON.parse(localStorage.getItem(SKEY) ?? '{}'));
+    } catch {
+      /* unreadable storage just means defaults */
     }
+    const saveSettings = (): void => {
+      try {
+        localStorage.setItem(SKEY, JSON.stringify(settings));
+      } catch {
+        /* private mode — the session still works */
+      }
+    };
+
+    function buildSim() {
+      const s = createSimulation(
+        data.nodes.map((n) => n.id),
+        data.links,
+        {
+          linkDistance: settings.linkDistance,
+          repulsion: settings.repulsion,
+          centerStrength: settings.centerStrength / 1000,
+        },
+      );
+      // Pin the note being read at the centre so the local graph is legible.
+      const focus = s.nodes.find((n) => n.id === data.current);
+      if (focus) {
+        focus.x = 0;
+        focus.y = 0;
+        focus.fixed = true;
+      }
+      return s;
+    }
+
+    let sim = buildSim();
 
     // Theme tokens, re-read whenever the theme flips.
     let palette = readPalette();
@@ -182,14 +256,19 @@ function hash(s: string): number {
     let height = 0;
 
     const neighbours = new Map<string, Set<string>>();
-    for (const link of data.links) {
-      if (!neighbours.has(link.source)) neighbours.set(link.source, new Set());
-      if (!neighbours.has(link.target)) neighbours.set(link.target, new Set());
-      neighbours.get(link.source)!.add(link.target);
-      neighbours.get(link.target)!.add(link.source);
+    function indexNeighbours(): void {
+      neighbours.clear();
+      for (const link of data.links) {
+        if (!neighbours.has(link.source)) neighbours.set(link.source, new Set());
+        if (!neighbours.has(link.target)) neighbours.set(link.target, new Set());
+        neighbours.get(link.source)!.add(link.target);
+        neighbours.get(link.target)!.add(link.source);
+      }
     }
+    indexNeighbours();
 
-    const radiusOf = (degree: number): number => Math.min(11, 3.4 + Math.sqrt(degree) * 1.9);
+    const radiusOf = (degree: number): number =>
+      Math.min(11, 3.4 + Math.sqrt(degree) * 1.9) * (settings.nodeScale / 100);
 
     function resize(): void {
       const rect = canvas.getBoundingClientRect();
@@ -248,7 +327,11 @@ function hash(s: string): number {
         ctx.stroke();
       }
 
-      const showAllLabels = sim.nodes.length <= 26;
+      // "auto" is the old behaviour: label everything while it still fits.
+      const showAllLabels =
+        settings.labels === 'all' ||
+        (settings.labels === 'auto' && sim.nodes.length <= 26);
+      const labelsOff = settings.labels === 'none';
       for (const node of sim.nodes) {
         const p = toScreen(node);
         const isCurrent = node.id === data.current;
@@ -279,7 +362,7 @@ function hash(s: string): number {
         ctx.strokeStyle = palette.surface;
         ctx.stroke();
 
-        if (showAllLabels || node.id === hovered || isCurrent) {
+        if (!labelsOff && (showAllLabels || node.id === hovered || isCurrent)) {
           const info = meta.get(node.id);
           if (info) {
             ctx.globalAlpha = lit ? 1 : 0.15;
@@ -386,6 +469,98 @@ function hash(s: string): number {
       fit();
       draw();
     });
+
+    // ---------- settings panel ----------
+    {
+      const panel = document.querySelector<HTMLFormElement>(`[data-settings-panel="${key}"]`);
+      const toggle = document.querySelector<HTMLButtonElement>(`[data-settings-for="${key}"]`);
+
+      const relayout = (): void => {
+        sim = buildSim();
+        indexNeighbours();
+        if (reduceMotion) {
+          sim.run();
+          fit();
+          draw();
+          return;
+        }
+        sim.run(30);
+        const step = (): void => {
+          const alive = sim.tick();
+          fit();
+          draw();
+          if (alive) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      };
+
+      // Depth needs a bigger slice of the vault than the server sent, so the
+      // index is fetched once, on demand, and the neighbourhood recomputed with
+      // the same function the build used.
+      let vault: any = null;
+      const applyDepth = async (): Promise<void> => {
+        if (data.mode !== 'local' || !data.current) return;
+        if (!vault) vault = await fetch('/vault-index.json').then((r) => r.json());
+        const sub = neighborhood(vault, data.current, settings.depth, 400);
+        const clusters = detectCommunities(sub.nodes, sub.links);
+        data.nodes = sub.nodes.map((p: string) => ({
+          id: p,
+          title: vault.notes[p]?.title ?? p,
+          url: vault.notes[p]?.url ?? '#',
+          canvas: vault.notes[p]?.kind === 'canvas',
+          cluster: clusters.of[p] ?? 0,
+          hub: false,
+        }));
+        data.links = sub.links;
+        meta.clear();
+        for (const n of data.nodes) meta.set(n.id, n);
+        relayout();
+      };
+
+      const syncInputs = (): void => {
+        if (!panel) return;
+        for (const [k, v] of Object.entries(settings)) {
+          const field = panel.elements.namedItem(k) as HTMLInputElement | null;
+          if (field) field.value = String(v);
+          const out = panel.querySelector(`[data-out="${k}"]`);
+          if (out) out.textContent = String(v);
+        }
+      };
+      syncInputs();
+
+      toggle?.addEventListener('click', () => {
+        if (!panel) return;
+        const open = panel.hasAttribute('hidden');
+        panel.toggleAttribute('hidden', !open);
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+
+      panel?.addEventListener('input', (e) => {
+        const el = e.target as HTMLInputElement | HTMLSelectElement;
+        const name = el.name as keyof typeof settings;
+        if (!(name in settings)) return;
+        (settings as any)[name] = el.type === 'range' ? Number(el.value) : el.value;
+        const out = panel.querySelector(`[data-out="${name}"]`);
+        if (out) out.textContent = String(settings[name]);
+        saveSettings();
+
+        if (name === 'depth') void applyDepth();
+        else if (name === 'nodeScale' || name === 'labels') draw();
+        else relayout();
+      });
+
+      panel?.querySelector(`[data-defaults-for="${key}"]`)?.addEventListener('click', () => {
+        const hadDepth = settings.depth;
+        settings = { ...DEFAULTS };
+        saveSettings();
+        syncInputs();
+        if (hadDepth !== settings.depth) void applyDepth();
+        else relayout();
+      });
+
+      // Settings saved on another page shouldn't be silently ignored here.
+      if (settings.depth !== DEFAULTS.depth) void applyDepth();
+    }
 
     // ---------- run ----------
     resize();
