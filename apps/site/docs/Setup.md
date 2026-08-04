@@ -86,11 +86,11 @@ obsidiary({
   vault: './vault',          // or: repo: 'you/notes'
   title: 'My Notes',
   description: '',
-  explicitPublish: false,    // true → only notes with `publish: true`
+  explicitPublish: false, // only publish: true
   removeDrafts: true,        // drop `draft: true`
-  ignore: ['private/'],      // folders to skip entirely
-  base: '',                  // serve under a subpath, e.g. '/notes'
-  live: false,               // add /live, which renders any public vault
+  ignore: ['private/'],   // folders to skip
+  base: '',               // serve under /notes
+  live: false,            // add the /live page
 })
 ```
 

@@ -124,11 +124,12 @@ claim is just an assertion — and the person most misled by it will be you, lat
 **Cite anything you did not work out yourself.** The rule is that simple.
 
 ```markdown
-Shallow clones drop history, so `git describe` cannot find tags
-([git-clone docs](https://git-scm.com/docs/git-clone)).
+Shallow clones drop history, so `git describe`
+cannot find tags
+([git-clone docs][1]).
 
-Kahneman puts the anchoring effect at ~55% of the anchor
-(*Thinking, Fast and Slow*, ch. 11).
+Kahneman puts the anchoring effect at ~55% of the
+anchor (*Thinking, Fast and Slow*, ch. 11).
 ```
 
 Four things worth doing:
@@ -145,8 +146,9 @@ Four things worth doing:
 ```markdown
 > The docs say connection pooling is per-process.
 
-So our four workers each hold a pool — which is why the DB sees 4× the
-connections we configured. (My conclusion, not theirs. Unverified.)
+So our four workers each hold a pool — which is
+why the DB sees 4× the connections we configured.
+(My conclusion, not theirs. Unverified.)
 ```
 
 That last parenthesis is worth more than the citation. It tells you which part
@@ -181,17 +183,20 @@ tags: [howto, ci]
 
 # Shallow clones in CI
 
-`--depth 1` cut our checkout from 41s to 6s (measured, 2026-03).
+`--depth 1` cut our checkout from 41s to 6s
+(measured, 2026-03).
 
 ## Why
 
-The repo carries ~4 GB of history. CI needs one commit.
-Depth-1 fetches that one ([docs](https://git-scm.com/docs/git-clone)).
+The repo carries ~4 GB of history. CI needs one
+commit.
+Depth-1 fetches that one ([docs][1]).
 
 ## When not to
 
-Release jobs — `git describe` needs tags, and a shallow clone has none.
-Use `fetch-depth: 0` there.
+Release jobs — `git describe` needs tags, and a
+shallow clone has none. Use `fetch-depth: 0`
+there.
 
 Related: [[Build times]] · [[Release process]]
 ```
@@ -209,3 +214,5 @@ structure appears.
 
 Related: [[Shaping a vault with an AI agent]] · [[Syntax]] ·
 [[Publishing only some notes]]
+
+[1]: https://git-scm.com/docs/git-clone

@@ -37,14 +37,16 @@ Without `explicitPublish`, everything is published except:
 ```markdown
 ---
 publish: false     # never built
-draft: true        # never built (turn off with removeDrafts: false)
+draft: true    # never built; removeDrafts: false
 ---
 ```
 
 ## Skip whole folders
 
 ```js
-obsidiary({ ignore: ['private/', 'journal/', 'templates/'] })
+obsidiary({
+  ignore: ['private/', 'journal/'],
+})
 ```
 
 Skipped before parsing, so nothing in them is indexed, linked or searchable.

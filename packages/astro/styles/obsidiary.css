@@ -189,35 +189,17 @@ a { color: inherit; }
   padding: clamp(28px, 6vw, 72px) clamp(20px, 5vw, 40px) 25vh;
 }
 
-/* Break out of the measure, centred on it. Negative inline margins rather than
-   a transform, so nothing inside gets a new containing block — the copy button
-   is absolutely positioned in there.
-   `100vw` is the right clamp on small screens, where the sidebar is a drawer
-   and the note really does span the viewport; on desktop `--wide` is always the
-   smaller of the two, so the vw term never applies. */
-.obsidiary-note article > pre,
-.obsidiary-note article > .ob-code,
-.obsidiary-note article > .ob-table,
-.obsidiary-note article > .obsidiary-canvas {
-  /* `--avail` is the middle column, not the window — a block sized against the
-     viewport reaches back under the sidebar. The 4rem keeps a visible channel
-     between the block's border and the sidebar's edge. */
-  --breakout: min(var(--wide), calc(var(--avail, 100vw) - 6rem));
-  margin-inline: calc((100% - var(--breakout)) / 2);
-}
-
-/* The wrapper takes the width; the table centres in it rather than sitting at
-   its left edge, and scrolls inside it rather than pushing the page. */
+/* One column, every edge aligned. Blocks briefly broke out wider than the
+   prose to rescue one over-wide code block, and it ruined the page: a reading
+   column whose left and right edges keep moving is not a column. Anything too
+   wide for the measure scrolls inside its own box instead.
+   The table wrapper stays, because it stops a wide table pushing the whole
+   page sideways on a phone. */
 .obsidiary-note .ob-table {
   overflow-x: auto;
   margin-bottom: 1.5em;
 }
-.obsidiary-note .ob-table > table {
-  width: auto;
-  min-width: min(100%, var(--measure));
-  margin-inline: auto;
-  margin-bottom: 0;
-}
+.obsidiary-note .ob-table > table { margin-bottom: 0; }
 
 /* Titles and section heads take the Fell small caps; anything deeper stays in
    the reading face, because a long H3 set in small caps stops being readable. */
