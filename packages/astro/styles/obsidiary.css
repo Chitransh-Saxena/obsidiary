@@ -197,10 +197,26 @@ a { color: inherit; }
    smaller of the two, so the vw term never applies. */
 .obsidiary-note article > pre,
 .obsidiary-note article > .ob-code,
-.obsidiary-note article > table,
+.obsidiary-note article > .ob-table,
 .obsidiary-note article > .obsidiary-canvas {
-  --breakout: min(var(--wide), calc(100vw - 3rem));
+  /* `--avail` is the middle column, not the window — a block sized against the
+     viewport reaches back under the sidebar. The 4rem keeps a visible channel
+     between the block's border and the sidebar's edge. */
+  --breakout: min(var(--wide), calc(var(--avail, 100vw) - 6rem));
   margin-inline: calc((100% - var(--breakout)) / 2);
+}
+
+/* The wrapper takes the width; the table centres in it rather than sitting at
+   its left edge, and scrolls inside it rather than pushing the page. */
+.obsidiary-note .ob-table {
+  overflow-x: auto;
+  margin-bottom: 1.5em;
+}
+.obsidiary-note .ob-table > table {
+  width: auto;
+  min-width: min(100%, var(--measure));
+  margin-inline: auto;
+  margin-bottom: 0;
 }
 
 /* Titles and section heads take the Fell small caps; anything deeper stays in

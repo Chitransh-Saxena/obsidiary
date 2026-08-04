@@ -109,6 +109,15 @@ html { overflow-x: hidden; }
    sideways instead of scrolling inside its own box. */
 .ob-main, .ob-rail, .ob-graph, .ob-panel { min-width: 0; }
 
+/* How much room a wide block may actually take. Clamping break-out to the
+   viewport was wrong: the viewport includes the sidebar and the rail, so on a
+   1280px window a block sized against 100vw reached back underneath the
+   sidebar. This tracks the middle column instead, and each breakpoint restates
+   it because that is where the columns change. */
+:root { --avail: calc(min(1560px, 100vw) - var(--sidebar-w) - var(--rail-w)); }
+@media (max-width: 1180px) { :root { --avail: calc(min(1560px, 100vw) - var(--sidebar-w)); } }
+@media (max-width: 860px)  { :root { --avail: 100vw; } }
+
 .ob-sidebar,
 .ob-rail {
   position: sticky;
@@ -208,7 +217,10 @@ html { overflow-x: hidden; }
   margin: 0 0 0.7em;
   padding-left: 2px;
 }
-.ob-panel + .ob-panel { margin-top: 28px; }
+/* `~` and not `+`: GraphView emits a <script> after its section, so the outline
+   panel's *adjacent* sibling is that script and an adjacent-sibling rule silently
+   matched nothing — the graph and "On this page" sat flush against each other. */
+.ob-panel ~ .ob-panel { margin-top: 30px; }
 
 /* ---------- file tree ---------- */
 .ob-tree, .ob-tree ul {
@@ -326,6 +338,8 @@ html[data-focus="1"] .ob-layout { grid-template-columns: minmax(0, 1fr); }
 html[data-focus="1"] {
   --measure: 38rem;
   --wide: 66rem;
+  /* Both panels are gone, so the whole layout is the middle column. */
+  --avail: min(1560px, 100vw);
 }
 html[data-focus="1"] .ob-rail {
   grid-column: 1;

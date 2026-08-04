@@ -252,6 +252,19 @@ const seq = neighboursOf(index, note.path);
         wrap.appendChild(button);
       });
 
+      // ---------- wide tables ----------
+      // A table is shrink-to-fit. Widening its box with negative margins lets
+      // it grow but does not centre it — it sits at the left edge of the wider
+      // box and drifts towards the sidebar. So the wrapper takes the width and
+      // the table centres inside it, scrolling within its own box when the
+      // content is wider than the screen.
+      document.querySelectorAll<HTMLTableElement>('.obsidiary-note article > table').forEach((table) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'ob-table';
+        table.parentNode?.insertBefore(wrap, table);
+        wrap.appendChild(table);
+      });
+
       // ---------- theme ----------
       const toggleTheme = (): void => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
