@@ -129,9 +129,15 @@ PASS 7 — CHECK AND REPORT
 Report, and fix only the first of these:
 - every [[link]] whose target matches no filename and no alias
 - any note you could not classify
+- any claim that reads as though it came from somewhere — a figure, a
+  benchmark, a quotation, a "studies show" — and carries no source. Do NOT
+  invent citations; you cannot know where these came from. List them so I can
+  add the source or delete the claim.
+- anything that will be wrong in six months and is not dated: prices, versions,
+  benchmarks, API behaviour.
 - ANY file that looks private — money, health, addresses, credentials, other
   people's names — because this vault is about to become a public website.
-List those last two. Do not act on them. I will decide.
+Fix only the broken links. List the rest. I will decide.
 ````
 
 ## What you get

@@ -125,8 +125,27 @@ const hosts = [
       </header>
     </div>
 
+    <!-- ─────────── marginal index ─────────── -->
+    <!-- A codex puts its index in the margin, not across the top. It sits in
+         space the centred page already leaves empty, so it costs no measure. -->
+    <nav class="cx-index" aria-label="Contents">
+      <p class="cx-index-t">Index</p>
+      <ol>
+        <li><a href="#incipit">Incipit</a></li>
+        <li><a href="#uses">Cap. I <span>The uses</span></a></li>
+        <li><a href="#shelves">Cap. II <span>Own shelves</span></a></li>
+        <li><a href="#setting-forth">Cap. III <span>Setting forth</span></a></li>
+        <li><a href="#presses">Tabula <span>The presses</span></a></li>
+        <li><a href="#apologia">Apologia <span>Quartz</span></a></li>
+        <li><a href="#onward">Explicit <span>Two ways on</span></a></li>
+      </ol>
+      <hr class="cx-rule" />
+      <a class="cx-index-go" href="/docs/setup">Set up your own &rarr;</a>
+      <a class="cx-index-quiet" href="/docs">Read the guide</a>
+    </nav>
+
     <!-- ─────────── title page ─────────── -->
-    <section class="cx-title">
+    <section class="cx-title" id="incipit">
       <div class="cx-title-plate">
         <hr class="cx-rule cx-rule--double" />
         <p class="cx-imprint">Free · Open source · MIT</p>
@@ -202,7 +221,7 @@ const hosts = [
     </section>
 
     <!-- ─────────── cap. I — the argument ─────────── -->
-    <section class="cx-chap">
+    <section class="cx-chap" id="uses">
       <p class="cx-chapno">Cap. I</p>
       <h2 class="cx-chaph">Of the uses to which it is fairly put</h2>
       <hr class="cx-rule cx-rule--double" />
@@ -224,7 +243,7 @@ const hosts = [
     </section>
 
     <!-- ─────────── cap. II — dogfood + honesty ─────────── -->
-    <section class="cx-chap cx-chap--two">
+    <section class="cx-chap cx-chap--two" id="shelves">
       <div>
         <p class="cx-chapno">Cap. II</p>
         <h2 class="cx-chaph">Of the author's own shelves</h2>
@@ -262,7 +281,7 @@ const hosts = [
     </section>
 
     <!-- ─────────── cap. III — the setting forth ─────────── -->
-    <section class="cx-chap">
+    <section class="cx-chap" id="setting-forth">
       <p class="cx-chapno">Cap. III</p>
       <h2 class="cx-chaph">The setting-forth, in three motions</h2>
       <hr class="cx-rule cx-rule--double" />
@@ -300,7 +319,7 @@ const hosts = [
     </section>
 
     <!-- ─────────── the table ─────────── -->
-    <section class="cx-chap">
+    <section class="cx-chap" id="presses">
       <p class="cx-chapno">Tabula</p>
       <h2 class="cx-chaph">Of presses that ask nothing</h2>
       <hr class="cx-rule cx-rule--double" />
@@ -334,7 +353,7 @@ const hosts = [
     </section>
 
     <!-- ─────────── the apology ─────────── -->
-    <section class="cx-chap cx-chap--apology">
+    <section class="cx-chap cx-chap--apology" id="apologia">
       <p class="cx-chapno cx-chapno--rub">Apologia</p>
       <h2 class="cx-chaph">Quartz is good. Use it, unless…</h2>
       <hr class="cx-rule" />
@@ -360,7 +379,7 @@ const hosts = [
     <!-- "Explicit" is the closing formula of a manuscript, the counterpart to
          "incipit". It is also, here, literally what the page was missing: a
          reader who has read the whole argument had nowhere to go but back. -->
-    <section class="cx-finis">
+    <section class="cx-finis" id="onward">
       <hr class="cx-rule cx-rule--double" />
       <p class="cx-chapno cx-chapno--rub">Explicit</p>
       <h2 class="cx-chaph">Two ways onward</h2>
@@ -457,6 +476,39 @@ const hosts = [
 
     <script>
       import { boundsOf, createSimulation } from 'obsidiary';
+
+      // ---------- marginal index: mark where the reader is ----------
+      // Tracked by which section last crossed a line a third down the viewport,
+      // rather than by intersection ratio — a short section like the Tabula
+      // never wins a "most visible" contest against a long one.
+      {
+        const links = [...document.querySelectorAll<HTMLAnchorElement>('.cx-index ol a')];
+        const targets = links
+          .map((a) => ({ a, el: document.querySelector(a.getAttribute('href') ?? '') }))
+          .filter((t): t is { a: HTMLAnchorElement; el: Element } => Boolean(t.el));
+
+        if (targets.length) {
+          let frame = 0;
+          const mark = (): void => {
+            frame = 0;
+            const line = innerHeight / 3;
+            let current = targets[0];
+            for (const t of targets) {
+              if (t.el.getBoundingClientRect().top <= line) current = t;
+            }
+            for (const t of targets) {
+              if (t === current) t.a.setAttribute('aria-current', 'true');
+              else t.a.removeAttribute('aria-current');
+            }
+          };
+          const schedule = (): void => {
+            if (!frame) frame = requestAnimationFrame(mark);
+          };
+          addEventListener('scroll', schedule, { passive: true });
+          addEventListener('resize', schedule);
+          mark();
+        }
+      }
 
       document.getElementById('cx-theme')?.addEventListener('click', () => {
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -873,6 +925,87 @@ const hosts = [
         color: var(--cx-paper);
         background: var(--cx-rubric);
         outline-color: var(--cx-rubric);
+      }
+
+      /* ══════════ marginal index ══════════ */
+      .cx-index {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        left: max(18px, calc((100vw - var(--cx-page)) / 2 - 190px));
+        width: 158px;
+        z-index: 20;
+        font-family: var(--cx-fell);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        /* Hidden until there is genuinely margin to put it in — below this it
+           would either overlap the page or crush the measure. */
+        display: none;
+      }
+      @media (min-width: 1320px) {
+        .cx-index { display: block; }
+      }
+      .cx-index-t {
+        margin: 0 0 0.7rem;
+        color: var(--cx-ink-4);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.62rem;
+      }
+      .cx-index ol {
+        list-style: none;
+        margin: 0 0 0.9rem;
+        padding: 0;
+        border-left: 1px solid var(--cx-rule);
+      }
+      .cx-index li { margin: 0; }
+      .cx a.cx-index-link,
+      .cx-index ol a {
+        display: block;
+        padding: 5px 0 5px 12px;
+        margin-left: -1px;
+        border-left: 1px solid transparent;
+        color: var(--cx-ink-3);
+        text-decoration: none;
+        line-height: 1.25;
+        transition: color 150ms ease, border-color 150ms ease;
+      }
+      .cx-index ol a span {
+        display: block;
+        font-family: var(--cx-serif, inherit);
+        font-size: 0.92em;
+        font-style: italic;
+        letter-spacing: 0;
+        color: var(--cx-ink-4);
+      }
+      .cx-index ol a:hover { color: var(--cx-rubric); }
+      .cx-index ol a[aria-current="true"] {
+        color: var(--cx-rubric);
+        border-left-color: var(--cx-rubric);
+      }
+      .cx-index ol a[aria-current="true"] span { color: var(--cx-ink-3); }
+      .cx-index .cx-rule { margin: 0 0 0.7rem; }
+      .cx a.cx-index-go {
+        display: block;
+        color: var(--cx-rubric);
+        text-decoration: none;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.66rem;
+        margin-bottom: 0.35rem;
+      }
+      .cx a.cx-index-go:hover { text-decoration: underline; }
+      .cx a.cx-index-quiet {
+        display: block;
+        color: var(--cx-ink-4);
+        text-decoration: none;
+        font-style: italic;
+        font-size: 0.72rem;
+      }
+      .cx a.cx-index-quiet:hover { color: var(--cx-rubric); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cx-index ol a { transition: none; }
       }
 
       .cx-aside {
